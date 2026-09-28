@@ -5,7 +5,6 @@ import time
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
-from .agents import Agents
 from .config import Config
 from .dhan_client import Dhan, DhanError
 from .journal import Journal
@@ -22,6 +21,16 @@ def _mode(cfg: Config) -> str:
 
 def _plan_path(cfg: Config, day: date):
     return cfg.data_dir / f"plan-{day}.json"
+
+
+def _agents(cfg: Config):
+    if cfg.llm_provider == "gemini":
+        from .gemini_agents import GeminiAgents
+        return GeminiAgents(cfg.gemini_model)
+    if cfg.llm_provider == "claude":
+        from .agents import Agents
+        return Agents(cfg.claude_model)
+    raise SystemExit(f"Unknown LLM_PROVIDER {cfg.llm_provider!r}; use 'claude' or 'gemini'.")
 
 
 def cmd_scan(cfg: Config, args) -> None:
@@ -57,7 +66,7 @@ def cmd_scan(cfg: Config, args) -> None:
         print("No stocks passed the screener today.")
         return
 
-    agents = Agents(cfg.claude_model)
+    agents = _agents(cfg)
     market = agents.market_context(dhan.index_snapshot())
     log.info("Market context: %s", market)
     reviews = agents.catalysts(shortlist)

@@ -143,3 +143,29 @@ def test_agent_refusal_raises():
     agents, _ = _agents_with([SimpleNamespace(stop_reason="refusal", stop_details=None, content=[])])
     with pytest.raises(AgentError):
         agents._run("sys", "prompt", CATALYST_TOOL)
+
+
+def _gemini_with(response):
+    from btst.gemini_agents import GeminiAgents
+    agents = GeminiAgents.__new__(GeminiAgents)
+    agents.model = "test"
+    calls = []
+    agents.client = SimpleNamespace(models=SimpleNamespace(
+        generate_content=lambda **kw: calls.append(kw) or response))
+    return agents, calls
+
+
+def test_gemini_catalysts_parse_json_with_search_and_schema():
+    body = '{"reviews": [{"symbol": "AAA", "catalyst_score": 2, "veto": false, "red_flags": [], "summary": "order win"}]}'
+    agents, calls = _gemini_with(SimpleNamespace(text=body, candidates=[]))
+    assert agents.catalysts([{"symbol": "AAA"}])["AAA"]["catalyst_score"] == 2
+    config = calls[0]["config"]
+    assert config.tools[0].google_search is not None
+    assert config.response_json_schema == CATALYST_TOOL["input_schema"]
+
+
+def test_gemini_empty_answer_raises():
+    agents, _ = _gemini_with(SimpleNamespace(text=None, candidates=[SimpleNamespace(finish_reason="SAFETY")],
+                                             prompt_feedback=None))
+    with pytest.raises(AgentError, match="SAFETY"):
+        agents.market_context({})

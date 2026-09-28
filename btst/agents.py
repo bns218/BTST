@@ -70,7 +70,7 @@ GIFT Nifty, US futures and Asian markets, crude oil, USD/INR, and any scheduled 
 (RBI policy, US CPI/FOMC, budget, election results, geopolitical news).
 
 Be skeptical and concise. Only set allow_new_positions to false for genuine elevated overnight risk, not ordinary \
-volatility. Cite concrete facts in your reasons. Finish by calling submit_market_context."""
+volatility. Cite concrete facts in your reasons."""
 
 CATALYST_SYSTEM = """You are the news and catalyst analyst in a BTST (buy today, sell tomorrow) trading system for \
 Indian equities (NSE). A quantitative screener has already shortlisted stocks with strong price/volume action today. \
@@ -81,8 +81,7 @@ brokerage upgrades/downgrades, promoter pledges, SEBI/regulatory action, upcomin
 (especially tomorrow), and any move into ASM/GSM/T2T surveillance.
 
 Do not re-judge the chart; the screener handles price action. Set veto=true only for concrete overnight risks. \
-If you find nothing notable, use catalyst_score 0 and say so. Finish by calling submit_catalyst_review, covering \
-every candidate symbol exactly once."""
+If you find nothing notable, use catalyst_score 0 and say so. Cover every candidate symbol exactly once."""
 
 
 class AgentError(RuntimeError):
@@ -100,7 +99,7 @@ class Agents:
             response = self.client.beta.messages.create(
                 model=self.model,
                 max_tokens=16000,
-                system=system,
+                system=f"{system}\n\nFinish by calling {submit_tool['name']}.",
                 messages=messages,
                 tools=[WEB_SEARCH, submit_tool],
                 thinking={"type": "adaptive"},
@@ -119,12 +118,18 @@ class Agents:
         raise AgentError(f"Agent never called {submit_tool['name']}")
 
     def market_context(self, index_snapshot: dict) -> dict:
-        prompt = (f"Today is {date.today():%A %d %B %Y}. Live index snapshot from the broker:\n"
-                  f"{json.dumps(index_snapshot, indent=2)}\n\nAssess overnight risk for new BTST longs.")
-        return self._run(MARKET_CONTEXT_SYSTEM, prompt, MARKET_CONTEXT_TOOL)
+        return self._run(MARKET_CONTEXT_SYSTEM, market_prompt(index_snapshot), MARKET_CONTEXT_TOOL)
 
     def catalysts(self, candidates: list[dict]) -> dict[str, dict]:
-        prompt = (f"Today is {date.today():%A %d %B %Y}. Screener shortlist (NSE symbols with today's metrics):\n"
-                  f"{json.dumps(candidates, indent=2)}\n\nReview each for catalysts and overnight red flags.")
-        result = self._run(CATALYST_SYSTEM, prompt, CATALYST_TOOL)
+        result = self._run(CATALYST_SYSTEM, catalyst_prompt(candidates), CATALYST_TOOL)
         return {r["symbol"]: r for r in result["reviews"]}
+
+
+def market_prompt(index_snapshot: dict) -> str:
+    return (f"Today is {date.today():%A %d %B %Y}. Live index snapshot from the broker:\n"
+            f"{json.dumps(index_snapshot, indent=2)}\n\nAssess overnight risk for new BTST longs.")
+
+
+def catalyst_prompt(candidates: list[dict]) -> str:
+    return (f"Today is {date.today():%A %d %B %Y}. Screener shortlist (NSE symbols with today's metrics):\n"
+            f"{json.dumps(candidates, indent=2)}\n\nReview each for catalysts and overnight red flags.")

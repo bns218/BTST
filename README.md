@@ -1,6 +1,6 @@
 # BTST
 
-AI-assisted **Buy Today, Sell Tomorrow** trading for NSE equities, using **Dhan** for market data and orders and **Claude** agents for news and risk judgement.
+AI-assisted **Buy Today, Sell Tomorrow** trading for NSE equities, using **Dhan** for market data and orders and AI agents (**Gemini** or **Claude**, your choice) for news and risk judgement.
 
 > Paper trading is the default. Nothing real is ordered until you set `LIVE_TRADING=true`. This is a tool, not financial advice. Test it thoroughly in paper mode first.
 
@@ -17,8 +17,8 @@ anytime   report  Win rate and P&L from the journal
 | Piece | Kind | Job |
 |---|---|---|
 | `screener.py` | Code | Strong close near day high, volume surge vs 20-day average, EMA20/50 trend, RSI, 20-day breakout, liquidity, and upper-circuit filters |
-| `agents.py` → market context | Claude + web search | Checks global cues, GIFT Nifty, VIX, FII flows and event risk. Can block all new trades for the day |
-| `agents.py` → catalyst | Claude + web search | Finds why each stock moved. Vetoes stocks with results tomorrow, regulatory action, pledges, or ASM/T2T moves |
+| Market-context agent | Gemini + Google Search, or Claude + web search | Checks global cues, GIFT Nifty, VIX, FII flows and event risk. Can block all new trades for the day |
+| Catalyst agent | Gemini + Google Search, or Claude + web search | Finds why each stock moved. Vetoes stocks with results tomorrow, regulatory action, pledges, or ASM/T2T moves |
 | `risk.py` | Code | Ranks, sizes and sets SL/target, and enforces max positions, capital per trade, available funds and daily loss limit. **Agents can only remove trades, never add or resize them.** |
 | `journal.py` | SQLite | Every trade, fill and exit, for review and tuning |
 
@@ -27,8 +27,13 @@ anytime   report  Win rate and P&L from the journal
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env    # fill in DHAN_CLIENT_ID, DHAN_ACCESS_TOKEN, ANTHROPIC_API_KEY
+cp .env.example .env    # fill in DHAN_CLIENT_ID, DHAN_ACCESS_TOKEN and your AI key
 ```
+
+Pick the AI provider in `.env`:
+
+- `LLM_PROVIDER=gemini` with `GEMINI_API_KEY` (from aistudio.google.com). Default model is `gemini-3.8-flash`; change it with `GEMINI_MODEL`.
+- `LLM_PROVIDER=claude` with `ANTHROPIC_API_KEY`. Default model is `claude-opus-5`; change it with `CLAUDE_MODEL`.
 
 The Dhan access token comes from web.dhan.co → My Profile → Access DhanHQ APIs. Edit `universe.txt` to change which stocks are scanned.
 
