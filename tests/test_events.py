@@ -59,3 +59,32 @@ def test_filter_candidates_drops_results_stocks_and_notes_deals(tmp_path):
     kept, notes = filter_candidates(cands, cal, date(2026, 10, 7), limit=2)
     assert [c["symbol"] for c in kept] == ["BBB", "CCC"]
     assert any("AAA" in n and "excluded" in n for n in notes) and any("BBB" in n and "PE exit" in n for n in notes)
+
+
+def test_nse_board_meeting_and_deal_parsing_and_sync(tmp_path):
+    from btst.nse import NSE, parse_board_meetings, parse_large_deals, sync_calendar
+
+    meetings = [
+        {"symbol": "TCS", "bm_date": "08-Oct-2026", "purpose": "Financial Results/Dividend", "bm_desc": "Q2"},
+        {"symbol": "INFY", "bm_date": "23-Oct-2026", "purpose": "Financial Results"},
+        {"symbol": "WIPRO", "bm_date": "20-Oct-2026", "purpose": "Fund Raising"},
+        {"symbol": "NOTINUNIVERSE", "bm_date": "10-Oct-2026", "purpose": "Financial Results"},
+        {"symbol": "BAD", "bm_date": "garbage", "purpose": "Financial Results"},
+    ]
+    deals = {"BULK_DEALS_DATA": [{"symbol": "ADANIENT", "date": "25-Sep-2026", "buySell": "SELL", "qty": "8600000",
+                                  "watp": "2905", "clientName": "PROMOTER ENTITY"}],
+             "BLOCK_DEALS_DATA": [], "SHORT_DEALS_DATA": []}
+    events = parse_board_meetings({"data": meetings})
+    assert [(e.symbol, e.type) for e in events] == [("TCS", "results"), ("INFY", "results"),
+                                                     ("WIPRO", "board_meeting"), ("NOTINUNIVERSE", "results")]
+    assert parse_large_deals(deals)[0].type == "bulk_deal"
+
+    class FakeNSE(NSE):
+        def __init__(self): pass
+        def board_meetings(self, start, end): return parse_board_meetings(meetings)
+        def large_deals(self): return parse_large_deals(deals)
+
+    cal = EventCalendar(tmp_path / "c.csv")
+    added = sync_calendar(cal, FakeNSE(), {"TCS", "INFY", "WIPRO", "ADANIENT"}, date(2026, 9, 29))
+    assert added == 4 and not cal.between(date(2026, 1, 1), date(2027, 1, 1), "NOTINUNIVERSE")
+    assert EventCalendar(tmp_path / "c.csv").blocking_reasons("WIPRO", date(2026, 10, 19))

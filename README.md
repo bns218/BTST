@@ -35,7 +35,7 @@ Pick the AI provider in `.env`:
 - `LLM_PROVIDER=gemini` with `GEMINI_API_KEY` (from aistudio.google.com). Default model is `gemini-3.8-flash`; change it with `GEMINI_MODEL`.
 - `LLM_PROVIDER=claude` with `ANTHROPIC_API_KEY`. Default model is `claude-opus-5`; change it with `CLAUDE_MODEL`.
 
-The Dhan access token comes from web.dhan.co → My Profile → Access DhanHQ APIs. Edit `universe.txt` to change which stocks are scanned.
+The Dhan access token comes from web.dhan.co → My Profile → Access DhanHQ APIs. `universe.txt` lists every NSE F&O stock (207 as of 29-Sep-2026); edit it to change which stocks are scanned and calendar-checked.
 
 ## Daily use
 
@@ -48,17 +48,20 @@ python -m btst report
 
 ## Results and bulk-deal calendar
 
-`calendar.csv` (columns `symbol,type,date,note,source`) is checked on every `scan`:
+The calendar applies to **every stock in `universe.txt`**, not just a few. Each `scan` first refreshes it from NSE's board-meeting and bulk/block-deal feeds (`--no-sync` skips this; if NSE is unreachable it falls back to the saved file), then checks it. `calendar.csv` (columns `symbol,type,date,note,source`) is checked on every `scan`:
 
 - **`results` / `board_meeting` today or on the next trading day → the stock is dropped from the shortlist** (a code rule, not an agent judgement). An overnight hold through a result is a gap gamble.
 - **`bulk_deal` / `block_deal` in the last 3 days → shown as a note only.** A big buy can support a stock and a big promoter or PE sale can weigh on it, so it is context, not a signal.
 
 ```bash
+python -m btst calendar sync                      # refresh all stocks from NSE now (--days 45)
 python -m btst calendar list --days 30            # upcoming events
 python -m btst calendar check TCS                 # safe to hold overnight?
 python -m btst calendar add INFY results 2026-10-23 --note "Q2 FY27" --source "company notice"
 python -m btst calendar import nse_board_meetings.csv   # bulk load: symbol,type,date,note,source
 ```
+
+A stock with **no results date on file** is not blocked, but the scan prints a warning so you can confirm it is not reporting tomorrow. The NSE feed reader was written against NSE's public JSON endpoints and is unit-tested with sample payloads; if NSE changes the format or blocks the request, use `calendar add` / `calendar import` instead.
 
 Weekends are skipped when finding the "next trading day". Put NSE holidays (one `YYYY-MM-DD` per line) in `holidays.txt` next to the calendar. Dates seeded from news are marked "verify on NSE"; confirm them against the exchange's board-meeting and bulk-deal pages before relying on them.
 

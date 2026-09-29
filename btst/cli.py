@@ -9,6 +9,7 @@ from .config import Config
 from .dhan_client import Dhan, DhanError
 from .events import TYPES, Event, EventCalendar, filter_candidates, load_holidays
 from .journal import Journal
+from .nse import NSE, sync_calendar
 from .risk import build_plan
 from .screener import evaluate, with_today
 
@@ -38,12 +39,21 @@ def _calendar(cfg: Config) -> EventCalendar:
     return EventCalendar(cfg.calendar_file, load_holidays(cfg.calendar_file.with_name("holidays.txt")))
 
 
+def _universe(cfg: Config) -> list[str]:
+    return [s.strip().upper() for s in cfg.universe_file.read_text().splitlines()
+            if s.strip() and not s.startswith("#")]
+
+
+def _sync(cfg: Config, calendar: EventCalendar, today: date, days: int = 45) -> int:
+    added = sync_calendar(calendar, NSE(), set(_universe(cfg)), today, days)
+    log.info("Calendar synced from NSE: %d events for %d stocks", added, len(_universe(cfg)))
+    return added
+
+
 def cmd_scan(cfg: Config, args) -> None:
     dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir)
     journal = Journal(cfg.data_dir / "journal.db")
-    symbols = [s.strip().upper() for s in cfg.universe_file.read_text().splitlines()
-               if s.strip() and not s.startswith("#")]
-    ids = dhan.security_ids(symbols)
+    ids = dhan.security_ids(_universe(cfg))
     log.info("Fetching live quotes for %d stocks", len(ids))
     quotes = dhan.quotes(list(ids.values()))
 
@@ -64,7 +74,16 @@ def cmd_scan(cfg: Config, args) -> None:
         if c:
             candidates.append(c.to_dict())
     candidates.sort(key=lambda c: c["score"], reverse=True)
-    shortlist, calendar_notes = filter_candidates(candidates, _calendar(cfg), today, args.top)
+    calendar = _calendar(cfg)
+    if not args.no_sync:
+        try:
+            _sync(cfg, calendar, today)
+        except Exception as e:
+            log.warning("NSE calendar sync failed (%s); using the saved calendar", e)
+    shortlist, calendar_notes = filter_candidates(candidates, calendar, today, args.top)
+    for c in shortlist:
+        if not any(e.type == "results" and e.date >= today for e in calendar.between(today, today + timedelta(days=90), c["symbol"])):
+            calendar_notes.append(f"{c['symbol']}: no results date on file - confirm it is not reporting tomorrow")
     log.info("Screener passed %d stocks; sending %d to agents", len(candidates), len(shortlist))
 
     if not shortlist:
@@ -196,6 +215,9 @@ def cmd_calendar(cfg: Config, args) -> None:
                                    row.get("note", ""), row.get("source", "")))
         calendar.save()
         print(f"Imported; calendar now has {len(calendar.events)} events")
+    elif args.action == "sync":
+        added = _sync(cfg, calendar, today, args.days)
+        print(f"Synced {added} events; calendar now has {len(calendar.events)} events")
     elif args.action == "check":
         reasons = calendar.blocking_reasons(args.symbol, today)
         print(f"{args.symbol.upper()}: " + ("BLOCKED for BTST - " + "; ".join(reasons) if reasons else "no results due today or next trading day"))
@@ -222,6 +244,7 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     scan = sub.add_parser("scan", help="Screen stocks, run AI agents, write today's plan (run ~3:00-3:15 PM)")
     scan.add_argument("--top", type=int, default=10, help="Candidates to send to the agents")
+    scan.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
     buy = sub.add_parser("buy", help="Place today's planned CNC buys after confirmation (before 3:30 PM)")
     buy.add_argument("--yes", action="store_true", help="Skip the confirmation prompt")
     ext = sub.add_parser("exit", help="Next morning: manage SL/target/time exits (start at 9:15 AM)")
@@ -240,6 +263,8 @@ def main() -> None:
     add.add_argument("date", help="YYYY-MM-DD")
     add.add_argument("--note", default="")
     add.add_argument("--source", default="manual")
+    syn = cal_sub.add_parser("sync", help="Pull board meetings and bulk/block deals for the whole universe from NSE")
+    syn.add_argument("--days", type=int, default=45)
     imp = cal_sub.add_parser("import", help="Import events from a CSV (symbol,type,date,note,source)")
     imp.add_argument("file")
 

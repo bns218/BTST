@@ -36,7 +36,8 @@ class Dhan:
             pd.read_csv(SCRIP_MASTER_URL, low_memory=False).to_csv(cache, index=False)
         df = pd.read_csv(cache, low_memory=False)
         eq = df[(df["SEM_EXM_EXCH_ID"] == "NSE") & (df["SEM_SEGMENT"] == "E") & (df["SEM_SERIES"] == "EQ")]
-        mapping = dict(zip(eq["SEM_TRADING_SYMBOL"], eq["SEM_SMST_SECURITY_ID"].astype(str)))
+        mapping = dict(zip(eq["SEM_TRADING_SYMBOL"].str.replace(r"-EQ$", "", regex=True),
+                           eq["SEM_SMST_SECURITY_ID"].astype(str)))
         missing = [s for s in symbols if s not in mapping]
         if missing:
             log.warning("Not found in NSE EQ series (skipped): %s", ", ".join(missing))
