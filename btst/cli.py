@@ -2,11 +2,12 @@ import argparse
 import json
 import logging
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from .config import Config
 from .dhan_client import Dhan, DhanError
+from .events import TYPES, Event, EventCalendar, filter_candidates, load_holidays
 from .journal import Journal
 from .risk import build_plan
 from .screener import evaluate, with_today
@@ -31,6 +32,10 @@ def _agents(cfg: Config):
         from .agents import Agents
         return Agents(cfg.claude_model)
     raise SystemExit(f"Unknown LLM_PROVIDER {cfg.llm_provider!r}; use 'claude' or 'gemini'.")
+
+
+def _calendar(cfg: Config) -> EventCalendar:
+    return EventCalendar(cfg.calendar_file, load_holidays(cfg.calendar_file.with_name("holidays.txt")))
 
 
 def cmd_scan(cfg: Config, args) -> None:
@@ -59,11 +64,13 @@ def cmd_scan(cfg: Config, args) -> None:
         if c:
             candidates.append(c.to_dict())
     candidates.sort(key=lambda c: c["score"], reverse=True)
-    shortlist = candidates[:args.top]
-    log.info("Screener passed %d stocks; sending top %d to agents", len(candidates), len(shortlist))
+    shortlist, calendar_notes = filter_candidates(candidates, _calendar(cfg), today, args.top)
+    log.info("Screener passed %d stocks; sending %d to agents", len(candidates), len(shortlist))
 
     if not shortlist:
         print("No stocks passed the screener today.")
+        for n in calendar_notes:
+            print(f"  - {n}")
         return
 
     agents = _agents(cfg)
@@ -78,6 +85,7 @@ def cmd_scan(cfg: Config, args) -> None:
         stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct,
         realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
     )
+    notes = calendar_notes + notes
     output = {"date": str(today), "market": market, "shortlist": shortlist, "reviews": reviews,
               "notes": notes, "plans": [p.to_dict() for p in plans]}
     _plan_path(cfg, today).write_text(json.dumps(output, indent=2, default=str))
@@ -173,6 +181,31 @@ def cmd_exit(cfg: Config, args) -> None:
             time.sleep(args.poll)
 
 
+def cmd_calendar(cfg: Config, args) -> None:
+    calendar = _calendar(cfg)
+    today = datetime.now(IST).date()
+    if args.action == "add":
+        calendar.add(Event(args.symbol, args.type, date.fromisoformat(args.date), args.note, args.source))
+        calendar.save()
+        print(f"Saved {args.symbol.upper()} {args.type} on {args.date}")
+    elif args.action == "import":
+        import csv
+        with open(args.file, newline="") as f:
+            for row in csv.DictReader(f):
+                calendar.add(Event(row["symbol"], row["type"], date.fromisoformat(row["date"]),
+                                   row.get("note", ""), row.get("source", "")))
+        calendar.save()
+        print(f"Imported; calendar now has {len(calendar.events)} events")
+    elif args.action == "check":
+        reasons = calendar.blocking_reasons(args.symbol, today)
+        print(f"{args.symbol.upper()}: " + ("BLOCKED for BTST - " + "; ".join(reasons) if reasons else "no results due today or next trading day"))
+        for e in calendar.between(today - timedelta(days=30), today + timedelta(days=60), args.symbol):
+            print(f"  {e.date}  {e.type:<13} {e.note}")
+    else:
+        for e in calendar.between(today - timedelta(days=args.past), today + timedelta(days=args.days)):
+            print(f"{e.date}  {e.symbol:<12} {e.type:<13} {e.note}  [{e.source}]")
+
+
 def cmd_report(cfg: Config, args) -> None:
     journal = Journal(cfg.data_dir / "journal.db")
     rows = journal.summary()
@@ -194,7 +227,22 @@ def main() -> None:
     ext = sub.add_parser("exit", help="Next morning: manage SL/target/time exits (start at 9:15 AM)")
     ext.add_argument("--poll", type=int, default=15, help="Seconds between price checks")
     sub.add_parser("report", help="Journal P&L summary")
+    cal = sub.add_parser("calendar", help="Results / bulk-deal calendar used to veto BTST picks")
+    cal_sub = cal.add_subparsers(dest="action", required=True)
+    lst = cal_sub.add_parser("list", help="Upcoming events")
+    lst.add_argument("--days", type=int, default=30)
+    lst.add_argument("--past", type=int, default=3)
+    chk = cal_sub.add_parser("check", help="Is this stock safe to hold overnight?")
+    chk.add_argument("symbol")
+    add = cal_sub.add_parser("add", help="Add or update one event")
+    add.add_argument("symbol")
+    add.add_argument("type", choices=sorted(TYPES))
+    add.add_argument("date", help="YYYY-MM-DD")
+    add.add_argument("--note", default="")
+    add.add_argument("--source", default="manual")
+    imp = cal_sub.add_parser("import", help="Import events from a CSV (symbol,type,date,note,source)")
+    imp.add_argument("file")
 
     args = parser.parse_args()
     cfg = Config.from_env()
-    {"scan": cmd_scan, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report}[args.command](cfg, args)
+    {"scan": cmd_scan, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar}[args.command](cfg, args)

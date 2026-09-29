@@ -46,6 +46,22 @@ python -m btst exit      # next trading day, start at 9:15 AM and leave it runni
 python -m btst report
 ```
 
+## Results and bulk-deal calendar
+
+`calendar.csv` (columns `symbol,type,date,note,source`) is checked on every `scan`:
+
+- **`results` / `board_meeting` today or on the next trading day → the stock is dropped from the shortlist** (a code rule, not an agent judgement). An overnight hold through a result is a gap gamble.
+- **`bulk_deal` / `block_deal` in the last 3 days → shown as a note only.** A big buy can support a stock and a big promoter or PE sale can weigh on it, so it is context, not a signal.
+
+```bash
+python -m btst calendar list --days 30            # upcoming events
+python -m btst calendar check TCS                 # safe to hold overnight?
+python -m btst calendar add INFY results 2026-10-23 --note "Q2 FY27" --source "company notice"
+python -m btst calendar import nse_board_meetings.csv   # bulk load: symbol,type,date,note,source
+```
+
+Weekends are skipped when finding the "next trading day". Put NSE holidays (one `YYYY-MM-DD` per line) in `holidays.txt` next to the calendar. Dates seeded from news are marked "verify on NSE"; confirm them against the exchange's board-meeting and bulk-deal pages before relying on them.
+
 ## Notes and risks
 
 - **Short delivery:** if your seller fails to deliver, your BTST sell becomes a short delivery and the exchange auctions it at a penalty. Stick to liquid stocks (`MIN_TURNOVER_CR`).

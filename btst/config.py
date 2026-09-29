@@ -29,6 +29,7 @@ class Config:
     claude_model: str
     gemini_model: str
     universe_file: Path
+    calendar_file: Path
     data_dir: Path
 
     @classmethod
@@ -50,5 +51,6 @@ class Config:
             claude_model=env("CLAUDE_MODEL", "claude-opus-5"),
             gemini_model=env("GEMINI_MODEL", "gemini-3.8-flash"),
             universe_file=Path(env("UNIVERSE_FILE", "universe.txt")),
+            calendar_file=Path(env("CALENDAR_FILE", "calendar.csv")),
             data_dir=Path(env("DATA_DIR", "data")),
         )
