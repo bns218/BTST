@@ -11,6 +11,7 @@ from .events import TYPES, Event, EventCalendar, filter_candidates, load_holiday
 from .journal import Journal
 from .kite_quotes import normalize_kite_quotes
 from .nse import NSE, sync_calendar
+from . import review as rv
 from .risk import build_plan, build_sell_ideas
 from .screener import evaluate, mover_row, quote_screen, rank_movers, with_today
 
@@ -405,6 +406,31 @@ def cmd_calendar(cfg: Config, args) -> None:
             print(f"{e.date}  {e.symbol:<12} {e.type:<13} {e.note}  [{e.source}]")
 
 
+def cmd_review(cfg: Config, args) -> None:
+    picks, results = cfg.review_dir / "picks.csv", cfg.review_dir / "results.csv"
+    holidays = load_holidays(cfg.calendar_file.with_name("holidays.txt"))
+    today = datetime.now(IST).date()
+    if args.action == "add":
+        day = date.fromisoformat(args.date) if args.date else today
+        rows = json.loads(open(args.file).read())
+        new = rv.add_picks(picks, [rv.Pick(day, args.session, r["side"], r["symbol"].upper(), float(r["ref_price"]),
+                                           r.get("stop"), r.get("target"), r.get("tags", ""), r.get("reason", ""))
+                                   for r in rows])
+        print(f"Logged {len(rows)} {args.session} picks for {day} ({new} new)")
+    elif args.action == "pending":
+        todo = rv.pending(picks, results, today, holidays)
+        print(json.dumps([{"pick_date": p.day.isoformat(), "session": p.session, "side": p.side, "symbol": p.symbol,
+                           "eval_date": d.isoformat()} for p, d in todo], indent=1))
+    elif args.action == "score":
+        scored, missing = rv.score_pending(picks, results, rv.load_bars(args.prices), today, holidays)
+        print(f"Scored {scored} picks")
+        if missing:
+            print("No price bar for: " + ", ".join(missing))
+    else:
+        since = today - timedelta(days=args.days) if args.days else None
+        print(rv.format_summary(rv.summarize(results, since)))
+
+
 def cmd_report(cfg: Config, args) -> None:
     journal = Journal(cfg.data_dir / "journal.db")
     rows = journal.summary()
@@ -440,6 +466,17 @@ def main() -> None:
     ext = sub.add_parser("exit", help="Next morning: manage SL/target/time exits (start at 9:15 AM)")
     ext.add_argument("--poll", type=int, default=15, help="Seconds between price checks")
     sub.add_parser("report", help="Journal P&L summary")
+    rev = sub.add_parser("review", help="Log picks and score them against what the market really did")
+    rev_sub = rev.add_subparsers(dest="action", required=True)
+    ra = rev_sub.add_parser("add", help="Log picks from a JSON list [{side,symbol,ref_price,stop,target,tags,reason}]")
+    ra.add_argument("file")
+    ra.add_argument("--session", choices=["am", "pm"], required=True)
+    ra.add_argument("--date", help="YYYY-MM-DD, default today")
+    rev_sub.add_parser("pending", help="Picks whose result day has arrived and still need a price bar")
+    rs = rev_sub.add_parser("score", help='Score pending picks from {"YYYY-MM-DD": {"SYM": {open,high,low,close}}}')
+    rs.add_argument("prices")
+    rr = rev_sub.add_parser("report", help="How many picks moved the right way")
+    rr.add_argument("--days", type=int, default=0, help="Only the last N calendar days (0 = all)")
     cal = sub.add_parser("calendar", help="Results / bulk-deal calendar used to veto BTST picks")
     cal_sub = cal.add_subparsers(dest="action", required=True)
     lst = cal_sub.add_parser("list", help="Upcoming events")
@@ -460,4 +497,4 @@ def main() -> None:
 
     args = parser.parse_args()
     cfg = Config.from_env()
-    {"scan": cmd_scan, "movers": cmd_movers, "plan": cmd_plan, "kite-screen": cmd_kite_screen, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar}[args.command](cfg, args)
+    {"scan": cmd_scan, "movers": cmd_movers, "plan": cmd_plan, "kite-screen": cmd_kite_screen, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar, "review": cmd_review}[args.command](cfg, args)

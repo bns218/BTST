@@ -83,6 +83,21 @@ If the Kite MCP connector is connected to Claude Code (tools named `mcp__kite__*
 
 Limits to know: the Kite screen uses only the live quote (move, close position, turnover, order book), not price history, so it is lighter than `scan`. Only the Kite read tools are listed for the exit agent, no order tools are used anywhere, and `python -m btst buy` refuses live orders for Kite-sourced plans (it would send Kite symbols to Dhan), so you place those in Kite yourself. If your Kite connector has a different name, the tool prefix changes: edit the `tools:` line in `.claude/agents/btst-exit-manager.md`.
 
+## Daily review loop (what was right, what was wrong)
+
+`btst/review.py` logs every pick the morning brief and the 3:05 PM list make, scores them against the real day's prices, and keeps a record in `review/`:
+
+```bash
+python -m btst review add picks.json --session am|pm   # log picks (the daily commands do this)
+python -m btst review pending                          # picks whose result day has arrived
+python -m btst review score bars.json                  # score them against real open/high/low/close
+python -m btst review report --days 30                 # how many moved the right way, by list and by reason tag
+```
+
+How a pick is judged: morning picks on the day's close versus the previous close; 3:05 PM picks on the next trading day's open versus the price when picked. A buy is right if the price rose, a sell if it fell. The high and low are checked against the stop and target; a daily bar that touches both is reported as `ambiguous` because it cannot say which came first. The "edge" figure is the average move in the picked direction. Judging a 3:05 PM pick on the next open ignores what the stock does after 9:15, so it is a rough guide, not a trading result.
+
+Three desk commands (`.claude/commands/btst-desk-morning.md`, `-pm.md`, `-review.md`) run the loop: log at 8:29 AM and 3:05 PM, then at 4:15 PM score everything due, name the cause of each mistake (`review/lessons.md`), and make small evidence-based edits to the agent files (`review/changes.md`). Edits need at least 5 trading days, 15 scored picks and a pattern on 3 separate days. Risk limits, the no-orders rule, the event vetoes and the code are never changed automatically.
+
 ## Results and bulk-deal calendar
 
 The calendar applies to **every stock in `universe.txt`**, not just a few. Each `scan` first refreshes it from NSE's board-meeting and bulk/block-deal feeds (`--no-sync` skips this; if NSE is unreachable it falls back to the saved file), then checks it. `calendar.csv` (columns `symbol,type,date,note,source`) is checked on every `scan`:

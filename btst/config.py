@@ -31,6 +31,7 @@ class Config:
     gemini_model: str
     universe_file: Path
     calendar_file: Path
+    review_dir: Path
     data_dir: Path
 
     @classmethod
@@ -54,5 +55,6 @@ class Config:
             gemini_model=env("GEMINI_MODEL", "gemini-3.8-flash"),
             universe_file=Path(env("UNIVERSE_FILE", "universe.txt")),
             calendar_file=Path(env("CALENDAR_FILE", "calendar.csv")),
+            review_dir=Path(env("REVIEW_DIR", "review")),
             data_dir=Path(env("DATA_DIR", "data")),
         )
