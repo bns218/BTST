@@ -205,3 +205,22 @@ def test_normalize_reviews_accepts_all_three_shapes():
     assert normalize_reviews({"reviews": [r]}) == {"AAA": r}
     assert normalize_reviews([r]) == {"AAA": r}
     assert normalize_reviews({"AAA": {k: v for k, v in r.items() if k != "symbol"}})["AAA"]["symbol"] == "AAA"
+
+
+def test_normalize_kite_quotes_plain_wrapped_and_indices():
+    from btst.kite_quotes import normalize_kite_quotes
+    stock = _q(105, 100, 106, 100, 3_000_000)
+    idx = {"last_price": 22600.0, "ohlc": {"open": 1, "high": 1, "low": 1, "close": 22780.0}}
+    plain = {"NSE:INFY": stock, "NSE:NIFTY 50": idx, "BSE:INFY": stock, "NSE:BAD": {"x": 1}}
+    for doc in (plain, {"status": "success", "data": plain}):
+        quotes, indices = normalize_kite_quotes(doc, {"INFY"})
+        assert list(quotes) == ["INFY"] and indices["NIFTY 50"]["change_pct"] == -0.79
+
+
+def test_quote_screen_keeps_strong_closes_without_sellers():
+    from btst.screener import mover_row, quote_screen
+    cases = {"GOOD": _q(103, 100, 103.2, 100, 3_000_000), "WEAKCLOSE": _q(102, 100, 106, 100, 3_000_000),
+             "SELLERS": _q(103, 100, 103.2, 100, 3_000_000, buy=100, sell=200), "FLAT": _q(100.1, 100, 100.2, 99.9, 3_000_000),
+             "NOBOOK": {**_q(103, 100, 103.2, 100, 3_000_000), "buy_quantity": None, "sell_quantity": None}}
+    rows = [mover_row(k, k, q, 5) for k, q in cases.items()]
+    assert {r["symbol"] for r in quote_screen(rows)} == {"GOOD", "NOBOOK"}

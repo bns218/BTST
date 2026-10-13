@@ -9,9 +9,10 @@ from .config import Config
 from .dhan_client import Dhan, DhanError
 from .events import TYPES, Event, EventCalendar, filter_candidates, load_holidays
 from .journal import Journal
+from .kite_quotes import normalize_kite_quotes
 from .nse import NSE, sync_calendar
 from .risk import build_plan
-from .screener import evaluate, mover_row, rank_movers, with_today
+from .screener import evaluate, mover_row, quote_screen, rank_movers, with_today
 
 IST = ZoneInfo("Asia/Kolkata")
 log = logging.getLogger("btst")
@@ -65,10 +66,10 @@ def _shortlist_path(cfg: Config, day: date):
 
 
 def _write_shortlist(cfg: Config, day: date, mode: str, shortlist: list, losers: list, notes: list,
-                     index_snapshot: dict) -> None:
+                     index_snapshot: dict, source: str = "dhan") -> None:
     """Hand-off file for the Claude Code subagents: screened stocks only, no LLM calls made."""
-    doc = {"date": str(day), "mode": mode, "shortlist": shortlist, "losers": losers, "notes": notes,
-           "index_snapshot": index_snapshot}
+    doc = {"date": str(day), "mode": mode, "source": source, "shortlist": shortlist, "losers": losers,
+           "notes": notes, "index_snapshot": index_snapshot}
     path = _shortlist_path(cfg, day)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, indent=2, default=str))
@@ -83,6 +84,37 @@ def normalize_reviews(doc) -> dict[str, dict]:
     if isinstance(rows, dict):
         rows = [dict(v, symbol=v.get("symbol", k)) for k, v in rows.items()]
     return {r["symbol"]: r for r in rows}
+
+
+def cmd_kite_screen(cfg: Config, args) -> None:
+    """Screen from a saved Kite MCP `get_quotes` response. Needs no Dhan or AI keys."""
+    today = datetime.now(IST).date()
+    universe = _universe(cfg)
+    quotes, indices = normalize_kite_quotes(json.load(open(args.quotes)), set(universe))
+    missing = [s for s in universe if s not in quotes]
+    notes = []
+    if missing:
+        notes.append(f"{len(missing)} of {len(universe)} stocks missing from the Kite quotes: {', '.join(missing[:15])}"
+                     + (" ..." if len(missing) > 15 else ""))
+    if len(quotes) < len(universe) * 0.8:
+        raise SystemExit(f"Only {len(quotes)} of {len(universe)} stocks in the quotes file; refusing to rank a partial list.\n"
+                         + notes[0])
+    rows = [r for sym, q in quotes.items() if (r := mover_row(sym, sym, q, cfg.min_turnover_cr))]
+    calendar = _synced_calendar(cfg, today, args.no_sync)
+    losers: list = []
+    if args.mode == "movers":
+        gainers, losers = rank_movers(rows, args.top)
+        shortlist, cal_notes = filter_candidates(gainers, calendar, today, len(gainers))
+        losers, loser_notes = filter_candidates(losers, calendar, today, len(losers))
+        cal_notes += loser_notes
+    else:
+        shortlist, cal_notes = filter_candidates(quote_screen(rows), calendar, today, args.top)
+    if not shortlist and not losers:
+        print("No stocks passed the screen today.")
+        for n in notes + cal_notes:
+            print(f"  - {n}")
+        return
+    _write_shortlist(cfg, today, args.mode, shortlist, losers, notes + cal_notes, indices, source="kite")
 
 
 def cmd_plan(cfg: Config, args) -> None:
@@ -101,7 +133,8 @@ def cmd_plan(cfg: Config, args) -> None:
         realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
     )
     notes = doc.get("notes", []) + notes
-    output = {"date": str(today), "mode": doc["mode"], "market": market, "shortlist": doc["shortlist"],
+    output = {"date": str(today), "mode": doc["mode"], "source": doc.get("source", "dhan"), "market": market,
+              "shortlist": doc["shortlist"],
               "reviews": reviews, "losers_watchlist": doc.get("losers", []), "notes": notes,
               "plans": [p.to_dict() for p in plans]}
     _plan_path(cfg, today).write_text(json.dumps(output, indent=2, default=str))
@@ -255,9 +288,13 @@ def cmd_buy(cfg: Config, args) -> None:
     path = _plan_path(cfg, today)
     if not path.exists():
         raise SystemExit("No plan for today. Run `python -m btst scan` first.")
-    plans = json.loads(path.read_text())["plans"]
+    plan_doc = json.loads(path.read_text())
+    plans = plan_doc["plans"]
     if not plans:
         raise SystemExit("Today's plan has no trades.")
+    if plan_doc.get("source") == "kite" and cfg.live_trading:
+        raise SystemExit("This plan came from Kite data and uses ticker symbols, but `buy` places orders through Dhan. "
+                         "Place these orders in Kite yourself, or run in paper mode.")
 
     mode = _mode(cfg)
     for p in plans:
@@ -380,6 +417,11 @@ def main() -> None:
     mov.add_argument("--top", type=int, default=20, help="How many gainers and losers to take")
     mov.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
     mov.add_argument("--screen-only", action="store_true", help="Write gainers/losers for Claude Code subagents; no LLM calls")
+    ks = sub.add_parser("kite-screen", help="Screen from a saved Kite MCP get_quotes response (no Dhan/AI keys)")
+    ks.add_argument("--quotes", required=True, help="JSON saved from the Kite get_quotes tool")
+    ks.add_argument("--mode", choices=["btst", "movers"], default="btst")
+    ks.add_argument("--top", type=int, default=10, help="Shortlist size (btst) or gainers/losers each (movers)")
+    ks.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
     pl = sub.add_parser("plan", help="Risk-gate subagent output (market + reviews JSON) into today's plan")
     pl.add_argument("--market", required=True, help="JSON: bias, allow_new_positions, reasons")
     pl.add_argument("--reviews", required=True, help='JSON: {"reviews":[{symbol,catalyst_score,veto,red_flags,summary}]}')
@@ -408,4 +450,4 @@ def main() -> None:
 
     args = parser.parse_args()
     cfg = Config.from_env()
-    {"scan": cmd_scan, "movers": cmd_movers, "plan": cmd_plan, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar}[args.command](cfg, args)
+    {"scan": cmd_scan, "movers": cmd_movers, "plan": cmd_plan, "kite-screen": cmd_kite_screen, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar}[args.command](cfg, args)

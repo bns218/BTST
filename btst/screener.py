@@ -113,3 +113,11 @@ def rank_movers(rows: list[dict], n: int = 20) -> tuple[list[dict], list[dict]]:
     gainers = sorted((r for r in rows if r["day_change_pct"] > 0), key=lambda r: -r["day_change_pct"])[:n]
     losers = sorted((r for r in rows if r["day_change_pct"] < 0), key=lambda r: r["day_change_pct"])[:n]
     return gainers, losers
+
+
+def quote_screen(rows: list[dict]) -> list[dict]:
+    """BTST filters that need only a live quote (no price history): a moderate rise, a close near the
+    day's high, and no heavy selling pressure in the order book. Best first."""
+    ok = [r for r in rows if 0.5 <= r["day_change_pct"] <= 7 and r["close_position"] >= 0.7
+          and (r["sell_to_buy"] is None or r["sell_to_buy"] <= 1.3)]
+    return sorted(ok, key=lambda r: -r["score"])

@@ -72,6 +72,17 @@ Instead of calling the Gemini/Claude API from Python, you can let Claude Code ru
 
 The subagents have no shell access and cannot place orders. The hand-off is plain files: `python -m btst scan --screen-only` (or `movers --screen-only`) writes `data/shortlist-<date>.json`; the agents' JSON goes to `data/market-<date>.json` and `data/reviews-<date>.json`; `python -m btst plan --market ... --reviews ...` runs the same risk gate and writes the plan that `python -m btst buy` places after your confirmation.
 
+### Using the Kite (Zerodha) MCP instead of Dhan
+
+If the Kite MCP connector is connected to Claude Code (tools named `mcp__kite__*`), use these instead of the Dhan-based commands:
+
+| Piece | What it does |
+|---|---|
+| `/btst-kite-scan [btst\|movers]` | Logs in to Kite, fetches live quotes for the whole universe in one call, saves them, runs `python -m btst kite-screen`, then the market and catalyst subagents, then the code risk gate. Needs no Dhan or AI API keys. Never places orders. |
+| `/btst-kite-exit` + `btst-exit-manager` | Morning check: compares your Kite holdings and live prices with yesterday's planned stop and target and says sell now / sell at open / hold to 9:45. Read-only. |
+
+Limits to know: the Kite screen uses only the live quote (move, close position, turnover, order book), not price history, so it is lighter than `scan`. Only the Kite read tools are listed for the exit agent, no order tools are used anywhere, and `python -m btst buy` refuses live orders for Kite-sourced plans (it would send Kite symbols to Dhan), so you place those in Kite yourself. If your Kite connector has a different name, the tool prefix changes: edit the `tools:` line in `.claude/agents/btst-exit-manager.md`.
+
 ## Results and bulk-deal calendar
 
 The calendar applies to **every stock in `universe.txt`**, not just a few. Each `scan` first refreshes it from NSE's board-meeting and bulk/block-deal feeds (`--no-sync` skips this; if NSE is unreachable it falls back to the saved file), then checks it. `calendar.csv` (columns `symbol,type,date,note,source`) is checked on every `scan`:
