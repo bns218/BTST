@@ -60,6 +60,64 @@ def _synced_calendar(cfg: Config, today: date, no_sync: bool) -> EventCalendar:
     return calendar
 
 
+def _shortlist_path(cfg: Config, day: date):
+    return cfg.data_dir / f"shortlist-{day}.json"
+
+
+def _write_shortlist(cfg: Config, day: date, mode: str, shortlist: list, losers: list, notes: list,
+                     index_snapshot: dict) -> None:
+    """Hand-off file for the Claude Code subagents: screened stocks only, no LLM calls made."""
+    doc = {"date": str(day), "mode": mode, "shortlist": shortlist, "losers": losers, "notes": notes,
+           "index_snapshot": index_snapshot}
+    path = _shortlist_path(cfg, day)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc, indent=2, default=str))
+    print(f"Screened {len(shortlist)} stocks" + (f" and {len(losers)} losers" if losers else "") + f" -> {path}")
+    for n in notes:
+        print(f"  - {n}")
+
+
+def normalize_reviews(doc) -> dict[str, dict]:
+    """Accept {"reviews": [..]}, a bare list, or a {symbol: review} map; return {symbol: review}."""
+    rows = doc.get("reviews", doc) if isinstance(doc, dict) else doc
+    if isinstance(rows, dict):
+        rows = [dict(v, symbol=v.get("symbol", k)) for k, v in rows.items()]
+    return {r["symbol"]: r for r in rows}
+
+
+def cmd_plan(cfg: Config, args) -> None:
+    """Risk gate on subagent output: shortlist + market + reviews JSON -> plan file that `buy` can place."""
+    today = datetime.now(IST).date()
+    doc = json.loads(_shortlist_path(cfg, today).read_text())
+    market = json.loads(open(args.market).read())
+    reviews = normalize_reviews(json.loads(open(args.reviews).read()))
+    journal = Journal(cfg.data_dir / "journal.db")
+    funds = (Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir).available_funds()
+             if cfg.live_trading else cfg.capital_per_trade * cfg.max_positions)
+    plans, notes = build_plan(
+        doc["shortlist"], reviews, market,
+        capital_per_trade=cfg.capital_per_trade, max_positions=cfg.max_positions, available_funds=funds,
+        stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct,
+        realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
+    )
+    notes = doc.get("notes", []) + notes
+    output = {"date": str(today), "mode": doc["mode"], "market": market, "shortlist": doc["shortlist"],
+              "reviews": reviews, "losers_watchlist": doc.get("losers", []), "notes": notes,
+              "plans": [p.to_dict() for p in plans]}
+    _plan_path(cfg, today).write_text(json.dumps(output, indent=2, default=str))
+    print(f"Market: {market.get('bias')}  new positions allowed: {market.get('allow_new_positions')}")
+    for n in notes:
+        print(f"  - {n}")
+    print(f"\nBTST plan ({_mode(cfg)} mode):")
+    for pl in plans:
+        print(f"  {pl.symbol:<12} qty {pl.qty:<5} buy<= {pl.entry_limit:<9} SL {pl.stop_loss:<9} "
+              f"TGT {pl.target:<9} score {pl.final_score}\n      {pl.reason}")
+    if not plans:
+        print("  (no trades passed the risk gate)")
+    else:
+        print("\nReview, then run:  python -m btst buy")
+
+
 def cmd_scan(cfg: Config, args) -> None:
     dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir)
     journal = Journal(cfg.data_dir / "journal.db")
@@ -95,6 +153,10 @@ def cmd_scan(cfg: Config, args) -> None:
         print("No stocks passed the screener today.")
         for n in calendar_notes:
             print(f"  - {n}")
+        return
+
+    if args.screen_only:
+        _write_shortlist(cfg, today, "scan", shortlist, [], calendar_notes, dhan.index_snapshot())
         return
 
     agents = _agents(cfg)
@@ -142,6 +204,10 @@ def cmd_movers(cfg: Config, args) -> None:
     log.info("%d F&O stocks ranked; %d gainers and %d losers after the calendar check", len(rows), len(gainers), len(losers))
     if not gainers and not losers:
         print("No liquid F&O movers found.")
+        return
+
+    if args.screen_only:
+        _write_shortlist(cfg, today, "movers", gainers, losers, notes, dhan.index_snapshot())
         return
 
     agents = _agents(cfg)
@@ -309,9 +375,14 @@ def main() -> None:
     scan = sub.add_parser("scan", help="Screen stocks, run AI agents, write today's plan (run ~3:00-3:15 PM)")
     scan.add_argument("--top", type=int, default=10, help="Candidates to send to the agents")
     scan.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
+    scan.add_argument("--screen-only", action="store_true", help="Write the screened shortlist for Claude Code subagents; no LLM calls")
     mov = sub.add_parser("movers", help="Top N F&O gainers (BTST plan) and losers (watchlist), with agents")
     mov.add_argument("--top", type=int, default=20, help="How many gainers and losers to take")
     mov.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
+    mov.add_argument("--screen-only", action="store_true", help="Write gainers/losers for Claude Code subagents; no LLM calls")
+    pl = sub.add_parser("plan", help="Risk-gate subagent output (market + reviews JSON) into today's plan")
+    pl.add_argument("--market", required=True, help="JSON: bias, allow_new_positions, reasons")
+    pl.add_argument("--reviews", required=True, help='JSON: {"reviews":[{symbol,catalyst_score,veto,red_flags,summary}]}')
     buy = sub.add_parser("buy", help="Place today's planned CNC buys after confirmation (before 3:30 PM)")
     buy.add_argument("--yes", action="store_true", help="Skip the confirmation prompt")
     ext = sub.add_parser("exit", help="Next morning: manage SL/target/time exits (start at 9:15 AM)")
@@ -337,4 +408,4 @@ def main() -> None:
 
     args = parser.parse_args()
     cfg = Config.from_env()
-    {"scan": cmd_scan, "movers": cmd_movers, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar}[args.command](cfg, args)
+    {"scan": cmd_scan, "movers": cmd_movers, "plan": cmd_plan, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar}[args.command](cfg, args)

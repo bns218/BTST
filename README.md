@@ -59,6 +59,19 @@ Ranks all F&O stocks by today's % change (liquid ones only; stocks pinned at a c
 
 Biggest movers are often stretched, so `movers` is a different bet from `scan` (which also demands a strong close, volume surge and trend). Paper-trade both and compare in `python -m btst report`.
 
+## Claude Code subagents (no API keys for the AI step)
+
+Instead of calling the Gemini/Claude API from Python, you can let Claude Code run the AI steps. The repo ships project subagents in `.claude/agents/` and slash commands in `.claude/commands/`:
+
+| Piece | What it does |
+|---|---|
+| `/btst-scan [scan\|movers]` | Screens in code, runs the two subagents in parallel, risk-gates in code, shows the plan. **Never runs `buy`.** |
+| `btst-market-context` | Overnight-risk verdict (JSON). Web search only. |
+| `btst-catalyst-analyst` | Per-stock news catalyst and veto (JSON). Web search only. |
+| `/btst-morning` + `btst-morning-briefer` | 8:30 AM pre-market brief. Research only. |
+
+The subagents have no shell access and cannot place orders. The hand-off is plain files: `python -m btst scan --screen-only` (or `movers --screen-only`) writes `data/shortlist-<date>.json`; the agents' JSON goes to `data/market-<date>.json` and `data/reviews-<date>.json`; `python -m btst plan --market ... --reviews ...` runs the same risk gate and writes the plan that `python -m btst buy` places after your confirmation.
+
 ## Results and bulk-deal calendar
 
 The calendar applies to **every stock in `universe.txt`**, not just a few. Each `scan` first refreshes it from NSE's board-meeting and bulk/block-deal feeds (`--no-sync` skips this; if NSE is unreachable it falls back to the saved file), then checks it. `calendar.csv` (columns `symbol,type,date,note,source`) is checked on every `scan`:

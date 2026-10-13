@@ -197,3 +197,11 @@ def test_mover_row_tolerates_missing_order_book_fields():
     del q["buy_quantity"], q["sell_quantity"]
     row = mover_row("AAA", "1", q, min_turnover_cr=5)
     assert row["sell_to_buy"] is None and row["day_change_pct"] == 5.0 and row["close_position"] > 0.8
+
+
+def test_normalize_reviews_accepts_all_three_shapes():
+    from btst.cli import normalize_reviews
+    r = {"symbol": "AAA", "catalyst_score": 1, "veto": False, "red_flags": [], "summary": "ok"}
+    assert normalize_reviews({"reviews": [r]}) == {"AAA": r}
+    assert normalize_reviews([r]) == {"AAA": r}
+    assert normalize_reviews({"AAA": {k: v for k, v in r.items() if k != "symbol"}})["AAA"]["symbol"] == "AAA"
