@@ -54,8 +54,8 @@ python -m btst movers            # ~3:00-3:10 PM IST; --top 20 is the default
 
 Ranks all F&O stocks by today's % change (liquid ones only; stocks pinned at a circuit limit are skipped), then:
 
-- **Top 20 gainers** go through the same calendar check, market and catalyst agents, and risk gate as `scan`. The result is a BTST plan that `python -m btst buy` can place.
-- **Top 20 losers are a watchlist only. No orders.** A cash BTST trade is long-only: you cannot short in the cash market and carry it overnight (that needs futures, i.e. STBT, which this tool does not trade). The agents flag losers with real bad news ("avoid"), and mark the rest "no adverse news found - possible bounce, not a signal".
+- **Top 20 gainers** go through the same calendar check, market and catalyst agents, and risk gate as `scan`. The result is **up to 10 BTST buys** (`MAX_POSITIONS`, default 10) that `python -m btst buy` can place. Each buy is `CAPITAL_PER_TRADE` (default 20,000), so ten buys can be 2,00,000 of exposure: lower either setting if that is too much.
+- **Top 20 losers give up to 10 SELL ideas** (`MAX_SELL_IDEAS`, default 10) with a sell limit, a stop above and a target below. They are advisory: a cash BTST trade is long-only, so a sell is an intraday or stock-futures trade that this tool never places. The review rules mirror the buy side: results due, the F&O ban list or surveillance veto an idea; bad news supports it; good news is short-squeeze risk and skips it.
 
 Biggest movers are often stretched, so `movers` is a different bet from `scan` (which also demands a strong close, volume surge and trend). Paper-trade both and compare in `python -m btst report`.
 

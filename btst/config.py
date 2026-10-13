@@ -20,6 +20,7 @@ class Config:
     live_trading: bool
     capital_per_trade: float
     max_positions: int
+    max_sell_ideas: int
     max_daily_loss: float
     stop_loss_pct: float
     target_pct: float
@@ -41,7 +42,8 @@ class Config:
             dhan_access_token=env("DHAN_ACCESS_TOKEN", ""),
             live_trading=env("LIVE_TRADING", "false").lower() == "true",
             capital_per_trade=float(env("CAPITAL_PER_TRADE", "20000")),
-            max_positions=int(env("MAX_POSITIONS", "3")),
+            max_positions=int(env("MAX_POSITIONS", "10")),
+            max_sell_ideas=int(env("MAX_SELL_IDEAS", "10")),
             max_daily_loss=float(env("MAX_DAILY_LOSS", "2000")),
             stop_loss_pct=float(env("STOP_LOSS_PCT", "1.0")),
             target_pct=float(env("TARGET_PCT", "2.0")),

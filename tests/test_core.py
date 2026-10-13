@@ -224,3 +224,25 @@ def test_quote_screen_keeps_strong_closes_without_sellers():
              "NOBOOK": {**_q(103, 100, 103.2, 100, 3_000_000), "buy_quantity": None, "sell_quantity": None}}
     rows = [mover_row(k, k, q, 5) for k, q in cases.items()]
     assert {r["symbol"] for r in quote_screen(rows)} == {"GOOD", "NOBOOK"}
+
+
+def test_sell_ideas_mirror_rules_and_cap():
+    from btst.risk import build_sell_ideas
+    losers = [{"symbol": f"L{i}", "security_id": f"{i}", "ltp": 100.0, "weak_score": 90 - i} for i in range(6)]
+    rv = lambda **k: {"catalyst_score": 0, "veto": False, "red_flags": [], "summary": "s", **k}
+    reviews = {"L0": rv(), "L1": rv(veto=True, red_flags=["results tomorrow"]), "L2": rv(catalyst_score=1),
+               "L3": rv(catalyst_score=-2), "L4": rv(), "L5": rv()}
+    ideas, notes = build_sell_ideas(losers, reviews, max_ideas=3, stop_loss_pct=1.0, target_pct=2.0)
+    assert [i.symbol for i in ideas] == ["L3", "L0", "L4"]        # bad news first, then by weakness; capped at 3
+    top = ideas[0]
+    assert top.entry_limit == 99.8 and top.stop_loss > top.entry_limit > top.target
+    assert any("L1" in n and "vetoed" in n for n in notes) and any("L2" in n and "squeeze" in n for n in notes)
+
+
+def test_default_caps_are_ten(monkeypatch, tmp_path):
+    from btst.config import Config
+    monkeypatch.chdir(tmp_path)
+    for k in ("MAX_POSITIONS", "MAX_SELL_IDEAS"):
+        monkeypatch.delenv(k, raising=False)
+    cfg = Config.from_env()
+    assert (cfg.max_positions, cfg.max_sell_ideas) == (10, 10)

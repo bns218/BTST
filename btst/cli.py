@@ -11,7 +11,7 @@ from .events import TYPES, Event, EventCalendar, filter_candidates, load_holiday
 from .journal import Journal
 from .kite_quotes import normalize_kite_quotes
 from .nse import NSE, sync_calendar
-from .risk import build_plan
+from .risk import build_plan, build_sell_ideas
 from .screener import evaluate, mover_row, quote_screen, rank_movers, with_today
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -132,11 +132,13 @@ def cmd_plan(cfg: Config, args) -> None:
         stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct,
         realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
     )
-    notes = doc.get("notes", []) + notes
+    sells, sell_notes = build_sell_ideas(doc.get("losers", []), reviews, max_ideas=cfg.max_sell_ideas,
+                                         stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct)
+    notes = doc.get("notes", []) + notes + sell_notes
     output = {"date": str(today), "mode": doc["mode"], "source": doc.get("source", "dhan"), "market": market,
               "shortlist": doc["shortlist"],
-              "reviews": reviews, "losers_watchlist": doc.get("losers", []), "notes": notes,
-              "plans": [p.to_dict() for p in plans]}
+              "reviews": reviews, "losers": doc.get("losers", []), "sell_ideas": [i.to_dict() for i in sells],
+              "notes": notes, "plans": [p.to_dict() for p in plans]}
     _plan_path(cfg, today).write_text(json.dumps(output, indent=2, default=str))
     print(f"Market: {market.get('bias')}  new positions allowed: {market.get('allow_new_positions')}")
     for n in notes:
@@ -147,7 +149,9 @@ def cmd_plan(cfg: Config, args) -> None:
               f"TGT {pl.target:<9} score {pl.final_score}\n      {pl.reason}")
     if not plans:
         print("  (no trades passed the risk gate)")
-    else:
+    if doc.get("losers"):
+        _print_sell_ideas(sells, len(doc["losers"]))
+    if plans:
         print("\nReview, then run:  python -m btst buy")
 
 
@@ -220,6 +224,15 @@ def cmd_scan(cfg: Config, args) -> None:
         print(f"\nReview, then run:  python -m btst buy")
 
 
+def _print_sell_ideas(sells: list, n_losers: int) -> None:
+    print(f"\nSELL ideas from the top {n_losers} F&O losers (up to 10). Intraday or stock-futures only; "
+          "this tool never places them and cash BTST cannot short overnight:")
+    for i in sells:
+        print(f"  {i.symbol:<12} sell<= {i.entry_limit:<9} stop {i.stop_loss:<9} target {i.target:<9} score {i.final_score}\n      {i.reason}")
+    if not sells:
+        print("  (none passed the review)")
+
+
 def cmd_movers(cfg: Config, args) -> None:
     dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir)
     journal = Journal(cfg.data_dir / "journal.db")
@@ -255,10 +268,12 @@ def cmd_movers(cfg: Config, args) -> None:
         stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct,
         realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
     )
-    watch = [dict(l, review=loser_reviews.get(l["symbol"])) for l in losers]
-    notes += plan_notes
+    sells, sell_notes = build_sell_ideas(losers, loser_reviews, max_ideas=cfg.max_sell_ideas,
+                                         stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct)
+    notes += plan_notes + sell_notes
     output = {"date": str(today), "mode": "movers", "market": market, "shortlist": gainers, "reviews": gainer_reviews,
-              "losers_watchlist": watch, "notes": notes, "plans": [p.to_dict() for p in plans]}
+              "losers": losers, "sell_ideas": [i.to_dict() for i in sells],
+              "notes": notes, "plans": [p.to_dict() for p in plans]}
     _plan_path(cfg, today).write_text(json.dumps(output, indent=2, default=str))
 
     print(f"\nMarket: {market['bias']}  new positions allowed: {market['allow_new_positions']}")
@@ -271,12 +286,7 @@ def cmd_movers(cfg: Config, args) -> None:
         print(f"  {p.symbol:<12} qty {p.qty:<5} buy<= {p.entry_limit:<9} SL {p.stop_loss:<9} TGT {p.target:<9}\n      {p.reason}")
     if not plans:
         print("  (none passed the agents and risk gate)")
-    print(f"\nTop {len(losers)} F&O losers - WATCH ONLY, no orders (cash BTST cannot short overnight):")
-    for w in watch:
-        r = w["review"] or {}
-        tag = "avoid: " + "; ".join(r.get("red_flags") or [r.get("summary", "")]) if r.get("veto") else \
-              "no adverse news found - possible bounce, not a signal" if r else "not reviewed"
-        print(f"  {w['symbol']:<12} {w['day_change_pct']:>+6.2f}%  ltp {w['ltp']:<9} {tag}")
+    _print_sell_ideas(sells, len(losers))
     for n in notes:
         print(f"  - {n}")
     if plans:

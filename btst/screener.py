@@ -105,6 +105,7 @@ def mover_row(symbol: str, security_id: str, quote: dict, min_turnover_cr: float
         "close_position": round(pos, 2), "turnover_cr": round(turnover_cr, 1),
         "sell_to_buy": round(float(sell) / float(buy), 2) if buy and sell else None,
         "score": round(40 * min(max(change, 0) / 5, 1) + 40 * pos + 20 * min(turnover_cr / 200, 1), 1),
+        "weak_score": round(40 * min(max(-change, 0) / 5, 1) + 40 * (1 - pos) + 20 * min(turnover_cr / 200, 1), 1),
     }
 
 
