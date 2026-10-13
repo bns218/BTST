@@ -169,3 +169,31 @@ def test_gemini_empty_answer_raises():
                                              prompt_feedback=None))
     with pytest.raises(AgentError, match="SAFETY"):
         agents.market_context({})
+
+
+def _q(ltp, prev, hi, lo, vol, upper=None, lower=None, buy=100, sell=100):
+    return {"last_price": ltp, "volume": vol, "upper_circuit_limit": upper or prev * 1.2,
+            "lower_circuit_limit": lower or prev * 0.8, "buy_quantity": buy, "sell_quantity": sell,
+            "ohlc": {"open": prev, "high": hi, "low": lo, "close": prev}}
+
+
+def test_rank_movers_top_n_each_side_and_filters():
+    from btst.screener import mover_row, rank_movers
+    quotes = {f"S{i}": _q(100 + i, 100, 120, 80, 3_000_000) for i in range(-5, 6) if i}
+    quotes["THIN"] = _q(110, 100, 111, 99, 1_000)                      # illiquid
+    quotes["PINNED"] = _q(120, 100, 120, 119, 3_000_000, upper=120)    # at upper circuit
+    quotes["DOWNPIN"] = _q(80, 100, 81, 80, 3_000_000, lower=80)       # at lower circuit
+    rows = [r for s, q in quotes.items() if (r := mover_row(s, s, q, min_turnover_cr=5))]
+    assert {r["symbol"] for r in rows} == {f"S{i}" for i in range(-5, 6) if i}
+    gainers, losers = rank_movers(rows, n=3)
+    assert [g["symbol"] for g in gainers] == ["S5", "S4", "S3"]
+    assert [l["symbol"] for l in losers] == ["S-5", "S-4", "S-3"]
+    assert all(g["day_change_pct"] > 0 for g in gainers) and all(l["day_change_pct"] < 0 for l in losers)
+
+
+def test_mover_row_tolerates_missing_order_book_fields():
+    from btst.screener import mover_row
+    q = _q(105, 100, 106, 100, 3_000_000)
+    del q["buy_quantity"], q["sell_quantity"]
+    row = mover_row("AAA", "1", q, min_turnover_cr=5)
+    assert row["sell_to_buy"] is None and row["day_change_pct"] == 5.0 and row["close_position"] > 0.8

@@ -46,6 +46,19 @@ python -m btst exit      # next trading day, start at 9:15 AM and leave it runni
 python -m btst report
 ```
 
+## Top gainers and losers (F&O only)
+
+```bash
+python -m btst movers            # ~3:00-3:10 PM IST; --top 20 is the default
+```
+
+Ranks all F&O stocks by today's % change (liquid ones only; stocks pinned at a circuit limit are skipped), then:
+
+- **Top 20 gainers** go through the same calendar check, market and catalyst agents, and risk gate as `scan`. The result is a BTST plan that `python -m btst buy` can place.
+- **Top 20 losers are a watchlist only. No orders.** A cash BTST trade is long-only: you cannot short in the cash market and carry it overnight (that needs futures, i.e. STBT, which this tool does not trade). The agents flag losers with real bad news ("avoid"), and mark the rest "no adverse news found - possible bounce, not a signal".
+
+Biggest movers are often stretched, so `movers` is a different bet from `scan` (which also demands a strong close, volume surge and trend). Paper-trade both and compare in `python -m btst report`.
+
 ## Results and bulk-deal calendar
 
 The calendar applies to **every stock in `universe.txt`**, not just a few. Each `scan` first refreshes it from NSE's board-meeting and bulk/block-deal feeds (`--no-sync` skips this; if NSE is unreachable it falls back to the saved file), then checks it. `calendar.csv` (columns `symbol,type,date,note,source`) is checked on every `scan`:

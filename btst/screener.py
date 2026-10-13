@@ -85,3 +85,31 @@ def evaluate(symbol: str, security_id: str, df: pd.DataFrame, quote: dict,
         above_ema20=bool(today["close"] > ema20), above_ema50=bool(today["close"] > ema50),
         breakout_20d=bool(breakout), turnover_cr=round(turnover_cr, 1), score=round(float(score), 1),
     )
+
+
+def mover_row(symbol: str, security_id: str, quote: dict, min_turnover_cr: float) -> dict | None:
+    """One F&O stock's move today from a live quote. None if illiquid, unpriced, or pinned at a circuit limit."""
+    ltp, prev = float(quote.get("last_price") or 0), float(quote["ohlc"]["close"] or 0)
+    if ltp <= 0 or prev <= 0:
+        return None
+    high, low = float(quote["ohlc"]["high"]), float(quote["ohlc"]["low"])
+    turnover_cr = float(quote.get("volume") or 0) * ltp / 1e7
+    upper, lower = float(quote.get("upper_circuit_limit") or 0), float(quote.get("lower_circuit_limit") or 0)
+    if turnover_cr < min_turnover_cr or (upper and ltp >= upper * 0.99) or (lower and ltp <= lower * 1.01):
+        return None
+    buy, sell = quote.get("buy_quantity"), quote.get("sell_quantity")
+    change = (ltp / prev - 1) * 100
+    pos = (ltp - low) / (high - low) if high > low else 0.5
+    return {
+        "symbol": symbol, "security_id": security_id, "ltp": round(ltp, 2), "day_change_pct": round(change, 2),
+        "close_position": round(pos, 2), "turnover_cr": round(turnover_cr, 1),
+        "sell_to_buy": round(float(sell) / float(buy), 2) if buy and sell else None,
+        "score": round(40 * min(max(change, 0) / 5, 1) + 40 * pos + 20 * min(turnover_cr / 200, 1), 1),
+    }
+
+
+def rank_movers(rows: list[dict], n: int = 20) -> tuple[list[dict], list[dict]]:
+    """Top n gainers (biggest rise first) and top n losers (biggest fall first)."""
+    gainers = sorted((r for r in rows if r["day_change_pct"] > 0), key=lambda r: -r["day_change_pct"])[:n]
+    losers = sorted((r for r in rows if r["day_change_pct"] < 0), key=lambda r: r["day_change_pct"])[:n]
+    return gainers, losers

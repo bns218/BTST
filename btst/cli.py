@@ -11,7 +11,7 @@ from .events import TYPES, Event, EventCalendar, filter_candidates, load_holiday
 from .journal import Journal
 from .nse import NSE, sync_calendar
 from .risk import build_plan
-from .screener import evaluate, with_today
+from .screener import evaluate, mover_row, rank_movers, with_today
 
 IST = ZoneInfo("Asia/Kolkata")
 log = logging.getLogger("btst")
@@ -50,6 +50,16 @@ def _sync(cfg: Config, calendar: EventCalendar, today: date, days: int = 45) -> 
     return added
 
 
+def _synced_calendar(cfg: Config, today: date, no_sync: bool) -> EventCalendar:
+    calendar = _calendar(cfg)
+    if not no_sync:
+        try:
+            _sync(cfg, calendar, today)
+        except Exception as e:
+            log.warning("NSE calendar sync failed (%s); using the saved calendar", e)
+    return calendar
+
+
 def cmd_scan(cfg: Config, args) -> None:
     dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir)
     journal = Journal(cfg.data_dir / "journal.db")
@@ -74,12 +84,7 @@ def cmd_scan(cfg: Config, args) -> None:
         if c:
             candidates.append(c.to_dict())
     candidates.sort(key=lambda c: c["score"], reverse=True)
-    calendar = _calendar(cfg)
-    if not args.no_sync:
-        try:
-            _sync(cfg, calendar, today)
-        except Exception as e:
-            log.warning("NSE calendar sync failed (%s); using the saved calendar", e)
+    calendar = _synced_calendar(cfg, today, args.no_sync)
     shortlist, calendar_notes = filter_candidates(candidates, calendar, today, args.top)
     for c in shortlist:
         if not any(e.type == "results" and e.date >= today for e in calendar.between(today, today + timedelta(days=90), c["symbol"])):
@@ -118,6 +123,65 @@ def cmd_scan(cfg: Config, args) -> None:
               f"TGT {p.target:<9} score {p.final_score}\n      {p.reason}")
     if plans:
         print(f"\nReview, then run:  python -m btst buy")
+
+
+def cmd_movers(cfg: Config, args) -> None:
+    dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir)
+    journal = Journal(cfg.data_dir / "journal.db")
+    ids = dhan.security_ids(_universe(cfg))
+    quotes = dhan.quotes(list(ids.values()))
+    today = datetime.now(IST).date()
+
+    rows = [r for sym, sid in ids.items() if sid in quotes
+            and (r := mover_row(sym, sid, quotes[sid], cfg.min_turnover_cr))]
+    gainers, losers = rank_movers(rows, args.top)
+    calendar = _synced_calendar(cfg, today, args.no_sync)
+    gainers, notes = filter_candidates(gainers, calendar, today, len(gainers))
+    losers, loser_notes = filter_candidates(losers, calendar, today, len(losers))
+    notes += loser_notes
+    log.info("%d F&O stocks ranked; %d gainers and %d losers after the calendar check", len(rows), len(gainers), len(losers))
+    if not gainers and not losers:
+        print("No liquid F&O movers found.")
+        return
+
+    agents = _agents(cfg)
+    market = agents.market_context(dhan.index_snapshot())
+    gainer_reviews = agents.catalysts(gainers) if gainers else {}
+    loser_reviews = agents.catalysts(losers) if losers else {}
+
+    plans, plan_notes = build_plan(
+        gainers, gainer_reviews, market,
+        capital_per_trade=cfg.capital_per_trade, max_positions=cfg.max_positions,
+        available_funds=dhan.available_funds() if cfg.live_trading else cfg.capital_per_trade * cfg.max_positions,
+        stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct,
+        realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
+    )
+    watch = [dict(l, review=loser_reviews.get(l["symbol"])) for l in losers]
+    notes += plan_notes
+    output = {"date": str(today), "mode": "movers", "market": market, "shortlist": gainers, "reviews": gainer_reviews,
+              "losers_watchlist": watch, "notes": notes, "plans": [p.to_dict() for p in plans]}
+    _plan_path(cfg, today).write_text(json.dumps(output, indent=2, default=str))
+
+    print(f"\nMarket: {market['bias']}  new positions allowed: {market['allow_new_positions']}")
+    print(f"\nTop {len(gainers)} F&O gainers:")
+    for g in gainers:
+        flag = "VETO" if (gainer_reviews.get(g["symbol"]) or {}).get("veto") else ""
+        print(f"  {g['symbol']:<12} {g['day_change_pct']:>+6.2f}%  ltp {g['ltp']:<9} turnover {g['turnover_cr']:>7.1f}cr {flag}")
+    print(f"\nBTST plan from gainers ({_mode(cfg)} mode):")
+    for p in plans:
+        print(f"  {p.symbol:<12} qty {p.qty:<5} buy<= {p.entry_limit:<9} SL {p.stop_loss:<9} TGT {p.target:<9}\n      {p.reason}")
+    if not plans:
+        print("  (none passed the agents and risk gate)")
+    print(f"\nTop {len(losers)} F&O losers - WATCH ONLY, no orders (cash BTST cannot short overnight):")
+    for w in watch:
+        r = w["review"] or {}
+        tag = "avoid: " + "; ".join(r.get("red_flags") or [r.get("summary", "")]) if r.get("veto") else \
+              "no adverse news found - possible bounce, not a signal" if r else "not reviewed"
+        print(f"  {w['symbol']:<12} {w['day_change_pct']:>+6.2f}%  ltp {w['ltp']:<9} {tag}")
+    for n in notes:
+        print(f"  - {n}")
+    if plans:
+        print("\nReview, then run:  python -m btst buy")
 
 
 def cmd_buy(cfg: Config, args) -> None:
@@ -245,6 +309,9 @@ def main() -> None:
     scan = sub.add_parser("scan", help="Screen stocks, run AI agents, write today's plan (run ~3:00-3:15 PM)")
     scan.add_argument("--top", type=int, default=10, help="Candidates to send to the agents")
     scan.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
+    mov = sub.add_parser("movers", help="Top N F&O gainers (BTST plan) and losers (watchlist), with agents")
+    mov.add_argument("--top", type=int, default=20, help="How many gainers and losers to take")
+    mov.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
     buy = sub.add_parser("buy", help="Place today's planned CNC buys after confirmation (before 3:30 PM)")
     buy.add_argument("--yes", action="store_true", help="Skip the confirmation prompt")
     ext = sub.add_parser("exit", help="Next morning: manage SL/target/time exits (start at 9:15 AM)")
@@ -270,4 +337,4 @@ def main() -> None:
 
     args = parser.parse_args()
     cfg = Config.from_env()
-    {"scan": cmd_scan, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar}[args.command](cfg, args)
+    {"scan": cmd_scan, "movers": cmd_movers, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar}[args.command](cfg, args)
