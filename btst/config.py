@@ -26,9 +26,6 @@ class Config:
     target_pct: float
     exit_by: str
     min_turnover_cr: float
-    llm_provider: str
-    claude_model: str
-    gemini_model: str
     universe_file: Path
     calendar_file: Path
     review_dir: Path
@@ -50,9 +47,6 @@ class Config:
             target_pct=float(env("TARGET_PCT", "2.0")),
             exit_by=env("EXIT_BY", "09:45"),
             min_turnover_cr=float(env("MIN_TURNOVER_CR", "50")),
-            llm_provider=env("LLM_PROVIDER", "claude").lower(),
-            claude_model=env("CLAUDE_MODEL", "claude-opus-5"),
-            gemini_model=env("GEMINI_MODEL", "gemini-3.8-flash"),
             universe_file=Path(env("UNIVERSE_FILE", "universe.txt")),
             calendar_file=Path(env("CALENDAR_FILE", "calendar.csv")),
             review_dir=Path(env("REVIEW_DIR", "review")),

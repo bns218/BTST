@@ -5,7 +5,7 @@ argument-hint: "[scan|movers] (default: scan)"
 
 Run the BTST workflow for today in mode `$ARGUMENTS` (use `scan` if empty; `movers` means the top 20 F&O gainers and losers, giving up to 10 buy picks and up to 10 sell ideas). Work from the repo root and activate `.venv` if it exists. NEVER run `python -m btst buy`, place orders, or use any trading tool: stop after showing the plan.
 
-1. Screen with code: `python -m btst <mode> --screen-only`. It writes `data/shortlist-<today>.json` (calendar-vetoed stocks are already removed). If nothing passes, say so and stop.
+1. Screen with code: `python -m btst <mode>`. It writes `data/shortlist-<today>.json` (calendar-vetoed stocks are already removed). If nothing passes, say so and stop.
 2. Read that file. Launch BOTH subagents in parallel in a single message:
    - `btst-market-context`: pass the file's `index_snapshot` and `notes`.
    - `btst-catalyst-analyst`: pass the symbols and % moves from `shortlist` (side `long`; for `movers` also a second call with side `short` for the `losers` symbols, in the same message).

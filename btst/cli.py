@@ -27,16 +27,6 @@ def _plan_path(cfg: Config, day: date):
     return cfg.data_dir / f"plan-{day}.json"
 
 
-def _agents(cfg: Config):
-    if cfg.llm_provider == "gemini":
-        from .gemini_agents import GeminiAgents
-        return GeminiAgents(cfg.gemini_model)
-    if cfg.llm_provider == "claude":
-        from .agents import Agents
-        return Agents(cfg.claude_model)
-    raise SystemExit(f"Unknown LLM_PROVIDER {cfg.llm_provider!r}; use 'claude' or 'gemini'.")
-
-
 def _calendar(cfg: Config) -> EventCalendar:
     return EventCalendar(cfg.calendar_file, load_holidays(cfg.calendar_file.with_name("holidays.txt")))
 
@@ -185,7 +175,7 @@ def cmd_scan(cfg: Config, args) -> None:
     for c in shortlist:
         if not any(e.type == "results" and e.date >= today for e in calendar.between(today, today + timedelta(days=90), c["symbol"])):
             calendar_notes.append(f"{c['symbol']}: no results date on file - confirm it is not reporting tomorrow")
-    log.info("Screener passed %d stocks; sending %d to agents", len(candidates), len(shortlist))
+    log.info("Screener passed %d stocks; writing %d to the shortlist", len(candidates), len(shortlist))
 
     if not shortlist:
         print("No stocks passed the screener today.")
@@ -193,36 +183,7 @@ def cmd_scan(cfg: Config, args) -> None:
             print(f"  - {n}")
         return
 
-    if args.screen_only:
-        _write_shortlist(cfg, today, "scan", shortlist, [], calendar_notes, dhan.index_snapshot())
-        return
-
-    agents = _agents(cfg)
-    market = agents.market_context(dhan.index_snapshot())
-    log.info("Market context: %s", market)
-    reviews = agents.catalysts(shortlist)
-
-    plans, notes = build_plan(
-        shortlist, reviews, market,
-        capital_per_trade=cfg.capital_per_trade, max_positions=cfg.max_positions,
-        available_funds=dhan.available_funds() if cfg.live_trading else cfg.capital_per_trade * cfg.max_positions,
-        stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct,
-        realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
-    )
-    notes = calendar_notes + notes
-    output = {"date": str(today), "market": market, "shortlist": shortlist, "reviews": reviews,
-              "notes": notes, "plans": [p.to_dict() for p in plans]}
-    _plan_path(cfg, today).write_text(json.dumps(output, indent=2, default=str))
-
-    print(f"\nMarket: {market['bias']}  new positions allowed: {market['allow_new_positions']}")
-    for n in notes:
-        print(f"  - {n}")
-    print(f"\nBTST plan ({_mode(cfg)} mode):")
-    for p in plans:
-        print(f"  {p.symbol:<12} qty {p.qty:<5} buy<= {p.entry_limit:<9} SL {p.stop_loss:<9} "
-              f"TGT {p.target:<9} score {p.final_score}\n      {p.reason}")
-    if plans:
-        print(f"\nReview, then run:  python -m btst buy")
+    _write_shortlist(cfg, today, "scan", shortlist, [], calendar_notes, dhan.index_snapshot())
 
 
 def _print_sell_ideas(sells: list, n_losers: int) -> None:
@@ -253,45 +214,7 @@ def cmd_movers(cfg: Config, args) -> None:
         print("No liquid F&O movers found.")
         return
 
-    if args.screen_only:
-        _write_shortlist(cfg, today, "movers", gainers, losers, notes, dhan.index_snapshot())
-        return
-
-    agents = _agents(cfg)
-    market = agents.market_context(dhan.index_snapshot())
-    gainer_reviews = agents.catalysts(gainers) if gainers else {}
-    loser_reviews = agents.catalysts(losers) if losers else {}
-
-    plans, plan_notes = build_plan(
-        gainers, gainer_reviews, market,
-        capital_per_trade=cfg.capital_per_trade, max_positions=cfg.max_positions,
-        available_funds=dhan.available_funds() if cfg.live_trading else cfg.capital_per_trade * cfg.max_positions,
-        stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct,
-        realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
-    )
-    sells, sell_notes = build_sell_ideas(losers, loser_reviews, max_ideas=cfg.max_sell_ideas,
-                                         stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct)
-    notes += plan_notes + sell_notes
-    output = {"date": str(today), "mode": "movers", "market": market, "shortlist": gainers, "reviews": gainer_reviews,
-              "losers": losers, "sell_ideas": [i.to_dict() for i in sells],
-              "notes": notes, "plans": [p.to_dict() for p in plans]}
-    _plan_path(cfg, today).write_text(json.dumps(output, indent=2, default=str))
-
-    print(f"\nMarket: {market['bias']}  new positions allowed: {market['allow_new_positions']}")
-    print(f"\nTop {len(gainers)} F&O gainers:")
-    for g in gainers:
-        flag = "VETO" if (gainer_reviews.get(g["symbol"]) or {}).get("veto") else ""
-        print(f"  {g['symbol']:<12} {g['day_change_pct']:>+6.2f}%  ltp {g['ltp']:<9} turnover {g['turnover_cr']:>7.1f}cr {flag}")
-    print(f"\nBTST plan from gainers ({_mode(cfg)} mode):")
-    for p in plans:
-        print(f"  {p.symbol:<12} qty {p.qty:<5} buy<= {p.entry_limit:<9} SL {p.stop_loss:<9} TGT {p.target:<9}\n      {p.reason}")
-    if not plans:
-        print("  (none passed the agents and risk gate)")
-    _print_sell_ideas(sells, len(losers))
-    for n in notes:
-        print(f"  - {n}")
-    if plans:
-        print("\nReview, then run:  python -m btst buy")
+    _write_shortlist(cfg, today, "movers", gainers, losers, notes, dhan.index_snapshot())
 
 
 def cmd_buy(cfg: Config, args) -> None:
@@ -443,16 +366,14 @@ def cmd_report(cfg: Config, args) -> None:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    parser = argparse.ArgumentParser(prog="btst", description="AI-assisted BTST trading on Dhan")
+    parser = argparse.ArgumentParser(prog="btst", description="BTST trading helper: code screens and risk gate, Claude Code subagents review")
     sub = parser.add_subparsers(dest="command", required=True)
-    scan = sub.add_parser("scan", help="Screen stocks, run AI agents, write today's plan (run ~3:00-3:15 PM)")
-    scan.add_argument("--top", type=int, default=10, help="Candidates to send to the agents")
+    scan = sub.add_parser("scan", help="Screen stocks and write the shortlist for the Claude Code subagents (run ~3:00-3:15 PM)")
+    scan.add_argument("--top", type=int, default=10, help="Shortlist size")
     scan.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
-    scan.add_argument("--screen-only", action="store_true", help="Write the screened shortlist for Claude Code subagents; no LLM calls")
-    mov = sub.add_parser("movers", help="Top N F&O gainers (BTST plan) and losers (watchlist), with agents")
+    mov = sub.add_parser("movers", help="Top N F&O gainers (BTST plan) and losers (watchlist) for the Claude Code subagents")
     mov.add_argument("--top", type=int, default=20, help="How many gainers and losers to take")
     mov.add_argument("--no-sync", action="store_true", help="Skip the NSE calendar refresh")
-    mov.add_argument("--screen-only", action="store_true", help="Write gainers/losers for Claude Code subagents; no LLM calls")
     ks = sub.add_parser("kite-screen", help="Screen from a saved Kite MCP get_quotes response (no Dhan/AI keys)")
     ks.add_argument("--quotes", required=True, help="JSON saved from the Kite get_quotes tool")
     ks.add_argument("--mode", choices=["btst", "movers"], default="btst")

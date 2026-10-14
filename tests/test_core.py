@@ -4,7 +4,6 @@ from types import SimpleNamespace
 import pandas as pd
 import pytest
 
-from btst.agents import CATALYST_TOOL, Agents, AgentError
 from btst.journal import Journal
 from btst.risk import build_plan, round_tick
 from btst.screener import evaluate, with_today
@@ -107,68 +106,6 @@ def test_journal_roundtrip(tmp_path):
     j.record_exit(t["id"], 102.0, "TARGET", None)
     assert j.realized_pnl(date.today()) == 20.0
     assert j.open_trades("paper", bought_before=date.today() + timedelta(days=1)) == []
-
-
-class _FakeMessages:
-    def __init__(self, responses):
-        self.responses = list(responses)
-        self.calls = []
-
-    def create(self, **kwargs):
-        self.calls.append(kwargs)
-        return self.responses.pop(0)
-
-
-def _agents_with(responses):
-    agents = Agents.__new__(Agents)
-    agents.model = "test"
-    fake = _FakeMessages(responses)
-    agents.client = SimpleNamespace(beta=SimpleNamespace(messages=fake))
-    return agents, fake
-
-
-def test_agent_loop_resumes_pause_and_returns_submission():
-    submit = SimpleNamespace(type="tool_use", name="submit_catalyst_review",
-                             input={"reviews": [{"symbol": "AAA", "catalyst_score": 1, "veto": False,
-                                                 "red_flags": [], "summary": "ok"}]})
-    agents, fake = _agents_with([
-        SimpleNamespace(stop_reason="pause_turn", content=[SimpleNamespace(type="text", text="...")]),
-        SimpleNamespace(stop_reason="tool_use", content=[submit]),
-    ])
-    assert agents.catalysts([{"symbol": "AAA"}])["AAA"]["catalyst_score"] == 1
-    assert len(fake.calls) == 2 and fake.calls[1]["messages"][-1]["role"] == "assistant"
-
-
-def test_agent_refusal_raises():
-    agents, _ = _agents_with([SimpleNamespace(stop_reason="refusal", stop_details=None, content=[])])
-    with pytest.raises(AgentError):
-        agents._run("sys", "prompt", CATALYST_TOOL)
-
-
-def _gemini_with(response):
-    from btst.gemini_agents import GeminiAgents
-    agents = GeminiAgents.__new__(GeminiAgents)
-    agents.model = "test"
-    calls = []
-    agents.client = SimpleNamespace(models=SimpleNamespace(
-        generate_content=lambda **kw: calls.append(kw) or response))
-    return agents, calls
-
-
-def test_gemini_catalysts_parse_json_with_search_and_schema():
-    body = '{"reviews": [{"symbol": "AAA", "catalyst_score": 2, "veto": false, "red_flags": [], "summary": "order win"}]}'
-    agents, calls = _gemini_with(SimpleNamespace(text=body, candidates=[]))
-    assert agents.catalysts([{"symbol": "AAA"}])["AAA"]["catalyst_score"] == 2
-    config = calls[0]["config"]
-    assert config.tools[0].google_search is not None
-    assert config.response_json_schema == CATALYST_TOOL["input_schema"]
-
-
-def test_gemini_empty_answer_raises():
-    agents, _ = _gemini_with(SimpleNamespace(text=None, candidates=[SimpleNamespace(finish_reason="SAFETY")],
-                                             prompt_feedback=None))
-    with pytest.raises(AgentError, match="SAFETY"):
-        agents.market_context({})
 
 
 def _q(ltp, prev, hi, lo, vol, upper=None, lower=None, buy=100, sell=100):
