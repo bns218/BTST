@@ -1,7 +1,0 @@
-date,session,side,symbol,ref_price,stop,target,tags,reason
-2026-10-14,am,buy,TCS,2269.3,2246.61,2314.69,sector|momentum,"IT led Oct 13 rally, +6.79% to 2269.30; follow-through watch, cause of move not verified"
-2026-10-14,am,buy,HCLTECH,1326.0,1312.74,1352.52,sector|momentum,"Top Nifty gainer +8.42% on Oct 13; extended, only on dips holding 1320 (cause not verified)"
-2026-10-14,am,buy,SHRIRAMFIN,988.0,978.12,1007.76,momentum,3rd best Nifty gainer +6.31% to 988; cause not verified
-2026-10-14,am,sell,KOTAKBANK,439.0,443.39,430.22,momentum,Top Nifty loser -0.99% on a +1.6% index day; relative weakness
-2026-10-14,am,sell,MARUTI,11245.0,11357.45,11020.1,momentum,Fell ~0.6% to 11245 while index rallied; relative weakness
-2026-10-14,am,sell,ETERNAL,320.45,323.65,314.04,momentum,Fell 0.79% to 320.45 on a strong market day; relative weakness
