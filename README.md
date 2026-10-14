@@ -96,6 +96,8 @@ python -m btst review report --days 30                 # how many moved the righ
 
 How a pick is judged: morning picks on the day's close versus the previous close; 3:05 PM picks on the next trading day's open versus the price when picked. A buy is right if the price rose, a sell if it fell. The high and low are checked against the stop and target; a daily bar that touches both is reported as `ambiguous` because it cannot say which came first. The "edge" figure is the average move in the picked direction. Judging a 3:05 PM pick on the next open ignores what the stock does after 9:15, so it is a rough guide, not a trading result.
 
+Every brief opens with a data check (GIFT Nifty, ban list, results, flows, mover coverage). Picks whose cause or event risk could not be verified are tagged `unverified`, and when GIFT Nifty, the ban list and the results check are all missing the morning run logs at most three picks. The review compares `unverified` picks with the rest.
+
 Three desk commands (`.claude/commands/btst-desk-morning.md`, `-pm.md`, `-review.md`) run the loop: log at 8:29 AM and 3:05 PM, then at 4:15 PM score everything due, name the cause of each mistake (`review/lessons.md`), and make small evidence-based edits to the agent files (`review/changes.md`). Edits need at least 5 trading days, 15 scored picks and a pattern on 3 separate days. Risk limits, the no-orders rule, the event vetoes and the code are never changed automatically.
 
 ## Results and bulk-deal calendar
