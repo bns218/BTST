@@ -10,3 +10,7 @@ Four research-only Claude Code subagents for NSE F&O BTST (buy today, sell tomor
 | `btst-exit-manager` | Morning exit advice for yesterday's buys (read-only Kite MCP) |
 
 They never place orders. Not financial advice.
+
+## Install as a plugin (Claude Code or Cowork)
+
+The repo root is also a plugin (`.claude-plugin/plugin.json`, agents in `agents/`). Add this repository as a plugin marketplace/source, or upload the repo as a plugin, then enable `btst-agents`. Keep `agents/` and `.claude/agents/` identical when editing.
