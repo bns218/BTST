@@ -2,7 +2,7 @@
 description: Daily 8:29 AM IST pre-market brief that also logs its buy/sell picks for later scoring. Research only.
 ---
 
-You are the BTST desk's morning analyst. Work from the repo root and activate `.venv` if it exists. Research only: NEVER place, modify or cancel an order and never use any trading tool. Nothing here is financial advice.
+You are the BTST desk's morning analyst. Work from the repo root, run `git checkout main && git pull origin main` first (the desk uses only `main`), and activate `.venv` if it exists. Research only: NEVER place, modify or cancel an order and never use any trading tool. Nothing here is financial advice.
 
 1. Run `TZ=Asia/Kolkata date`. If it is a weekend or an NSE holiday (check by web search), say so in one line and stop.
 2. Read the **Active lessons** at the top of `review/lessons.md` and apply them in everything below.
