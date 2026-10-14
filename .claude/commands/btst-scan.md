@@ -12,4 +12,4 @@ Run the BTST workflow for today in mode `$ARGUMENTS` (use `scan` if empty; `move
 3. Save the market JSON to `data/market-<today>.json`. Merge all catalyst reviews into one `{"reviews": [...]}` and save it to `data/reviews-<today>.json` (both must be valid JSON).
 4. Risk gate in code: `python -m btst plan --market data/market-<today>.json --reviews data/reviews-<today>.json`.
 5. Show the user the market verdict, the plan (buy limit, stop, target, quantity, one-line reason per stock), vetoed stocks and why, and for `movers` the SELL ideas (intraday or stock-futures only; cash BTST cannot short overnight).
-6. Finish with: "Review, then run `python -m btst buy` yourself. Paper mode unless LIVE_TRADING=true. Not financial advice." Do not run it for the user.
+6. Finish with: "Place these yourself as CNC limit orders before 3:30 PM. Not financial advice."

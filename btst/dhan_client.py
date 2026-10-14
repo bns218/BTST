@@ -67,28 +67,3 @@ class Dhan:
         names = {"13": "NIFTY 50", "25": "NIFTY BANK", "21": "INDIA VIX"}
         data = _unwrap(self.api.ohlc_data({"IDX_I": [13, 25, 21]}))
         return {names.get(str(k), str(k)): v for k, v in data["data"]["IDX_I"].items()}
-
-    def ltp(self, security_ids: list[str]) -> dict[str, float]:
-        data = _unwrap(self.api.ticker_data({"NSE_EQ": [int(s) for s in security_ids]}))
-        return {str(k): float(v["last_price"]) for k, v in data["data"]["NSE_EQ"].items()}
-
-    def available_funds(self) -> float:
-        data = _unwrap(self.api.get_fund_limits())
-        return float(data.get("availabelBalance", data.get("availableBalance", 0)))
-
-    def place_order(self, security_id: str, side: str, qty: int, price: float | None, tag: str) -> str:
-        order_type = dhanhq.LIMIT if price else dhanhq.MARKET
-        data = _unwrap(self.api.place_order(
-            security_id=security_id,
-            exchange_segment=dhanhq.NSE,
-            transaction_type=side,
-            quantity=qty,
-            order_type=order_type,
-            product_type=dhanhq.CNC,
-            price=price or 0,
-            tag=tag,
-        ))
-        return str(data["orderId"])
-
-    def order_status(self, order_id: str) -> dict:
-        return _unwrap(self.api.get_order_by_id(order_id))

@@ -2,15 +2,15 @@
 
 AI-assisted **Buy Today, Sell Tomorrow** trading for NSE equities, using **Dhan** (or the Kite MCP) for market data and **Claude Code subagents** for news and risk judgement. There are no LLM API keys anywhere: the AI steps run inside Claude Code.
 
-> Paper trading is the default. Nothing real is ordered until you set `LIVE_TRADING=true`. This is a tool, not financial advice. Test it thoroughly in paper mode first.
+> This tool never places orders. It produces research and a plan; you place any trade yourself. Not financial advice.
 
 ## How it works
 
 ```
 ~3:00 PM  /btst-scan   scan (code) ─► shortlist file ─► market-context + catalyst subagents ─► plan (risk gate, code)
-~3:15 PM  buy          You review the plan, confirm ─► CNC LIMIT buys on Dhan (or paper journal)
-9:15 AM   exit         Polls LTP: sells on stop-loss / target, everything else at EXIT_BY (default 09:45)
-anytime   report       Win rate and P&L from the journal
+~3:15 PM  you          Review the plan and place any orders yourself (CNC limit, before 3:30 PM)
+9:15 AM   /btst-kite-exit  Read-only exit advice for yesterday's buys (Kite MCP)
+4:15 PM   review       Score the day's picks against real prices and learn (desk commands)
 ```
 
 | Piece | Kind | Job |
@@ -19,7 +19,6 @@ anytime   report       Win rate and P&L from the journal
 | `btst-market-context` | Claude Code subagent | Checks global cues, GIFT Nifty, VIX, FII flows and event risk. Can block all new trades for the day |
 | `btst-catalyst-analyst` | Claude Code subagent | Finds why each stock moved. Vetoes stocks with results tomorrow, regulatory action, pledges, or ASM/T2T moves |
 | `risk.py` | Code | Ranks, sizes and sets SL/target, and enforces max positions, capital per trade, available funds and daily loss limit. **Agents can only remove trades, never add or resize them.** |
-| `journal.py` | SQLite | Every trade, fill and exit, for review and tuning |
 
 ## Setup
 
@@ -35,9 +34,6 @@ The Dhan access token comes from web.dhan.co → My Profile → Access DhanHQ AP
 
 ```bash
 python -m btst scan      # ~3:00-3:10 PM IST: writes the shortlist; then run /btst-scan in Claude Code (or `plan` with the agents' JSON)
-python -m btst buy       # review and confirm before 3:30 PM
-python -m btst exit      # next trading day, start at 9:15 AM and leave it running
-python -m btst report
 ```
 
 ## Top gainers and losers (F&O only)
@@ -48,10 +44,10 @@ python -m btst movers            # ~3:00-3:10 PM IST; --top 20 is the default
 
 Ranks all F&O stocks by today's % change (liquid ones only; stocks pinned at a circuit limit are skipped), then:
 
-- **Top 20 gainers** go through the same calendar check, market and catalyst subagents, and risk gate as `scan`. The result is **up to 10 BTST buys** (`MAX_POSITIONS`, default 10) that `python -m btst buy` can place. Each buy is `CAPITAL_PER_TRADE` (default 20,000), so ten buys can be 2,00,000 of exposure: lower either setting if that is too much.
+- **Top 20 gainers** go through the same calendar check, market and catalyst subagents, and risk gate as `scan`. The result is **up to 10 BTST buys** (`MAX_POSITIONS`, default 10) for you to place yourself. Each buy is `CAPITAL_PER_TRADE` (default 20,000), so ten buys can be 2,00,000 of exposure: lower either setting if that is too much.
 - **Top 20 losers give up to 10 SELL ideas** (`MAX_SELL_IDEAS`, default 10) with a sell limit, a stop above and a target below. They are advisory: a cash BTST trade is long-only, so a sell is an intraday or stock-futures trade that this tool never places. The review rules mirror the buy side: results due, the F&O ban list or surveillance veto an idea; bad news supports it; good news is short-squeeze risk and skips it.
 
-Biggest movers are often stretched, so `movers` is a different bet from `scan` (which also demands a strong close, volume surge and trend). Paper-trade both and compare in `python -m btst report`.
+Biggest movers are often stretched, so `movers` is a different bet from `scan` (which also demands a strong close, volume surge and trend). Compare both with the review loop below.
 
 ## Claude Code subagents
 
@@ -59,12 +55,12 @@ Claude Code runs all the AI steps. The repo ships project subagents in `.claude/
 
 | Piece | What it does |
 |---|---|
-| `/btst-scan [scan\|movers]` | Screens in code, runs the two subagents in parallel, risk-gates in code, shows the plan. **Never runs `buy`.** |
+| `/btst-scan [scan\|movers]` | Screens in code, runs the two subagents in parallel, risk-gates in code, shows the plan. Never places orders. |
 | `btst-market-context` | Overnight-risk verdict (JSON). Web search only. |
 | `btst-catalyst-analyst` | Per-stock news catalyst and veto (JSON). Web search only. |
 | `/btst-morning` + `btst-morning-briefer` | 8:30 AM pre-market brief. Research only. |
 
-The subagents have no shell access and cannot place orders. The hand-off is plain files: `python -m btst scan` (or `movers`) writes `data/shortlist-<date>.json`; the agents' JSON goes to `data/market-<date>.json` and `data/reviews-<date>.json`; `python -m btst plan --market ... --reviews ...` runs the same risk gate and writes the plan that `python -m btst buy` places after your confirmation.
+The subagents have no shell access and cannot place orders. The hand-off is plain files: `python -m btst scan` (or `movers`) writes `data/shortlist-<date>.json`; the agents' JSON goes to `data/market-<date>.json` and `data/reviews-<date>.json`; `python -m btst plan --market ... --reviews ...` runs the same risk gate and writes the plan file.
 
 ### Using the Kite (Zerodha) MCP instead of Dhan
 
@@ -75,7 +71,7 @@ If the Kite MCP connector is connected to Claude Code (tools named `mcp__kite__*
 | `/btst-kite-scan [btst\|movers]` | Logs in to Kite, fetches live quotes for the whole universe in one call, saves them, runs `python -m btst kite-screen`, then the market and catalyst subagents, then the code risk gate. Needs no Dhan or AI API keys. Never places orders. |
 | `/btst-kite-exit` + `btst-exit-manager` | Morning check: compares your Kite holdings and live prices with yesterday's planned stop and target and says sell now / sell at open / hold to 9:45. Read-only. |
 
-Limits to know: the Kite screen uses only the live quote (move, close position, turnover, order book), not price history, so it is lighter than `scan`. Only the Kite read tools are listed for the exit agent, no order tools are used anywhere, and `python -m btst buy` refuses live orders for Kite-sourced plans (it would send Kite symbols to Dhan), so you place those in Kite yourself. If your Kite connector has a different name, the tool prefix changes: edit the `tools:` line in `.claude/agents/btst-exit-manager.md`.
+Limits to know: the Kite screen uses only the live quote (move, close position, turnover, order book), not price history, so it is lighter than `scan`. Only the Kite read tools are listed for the exit agent, no order tools are used anywhere, so you place orders in Kite yourself. If your Kite connector has a different name, the tool prefix changes: edit the `tools:` line in `.claude/agents/btst-exit-manager.md`.
 
 ## Daily review loop (what was right, what was wrong)
 
@@ -117,8 +113,7 @@ Weekends are skipped when finding the "next trading day". Put NSE holidays (one 
 
 - **Short delivery:** if your seller fails to deliver, your BTST sell becomes a short delivery and the exchange auctions it at a penalty. Stick to liquid stocks (`MIN_TURNOVER_CR`).
 - **Gap-downs** can blow through the stop-loss. Keep position sizes small.
-- In live mode, `exit` checks whether yesterday's buy actually filled before selling. Exit prices in the journal are the LTP when the exit fired, not the exact fill price.
-- Costs such as STT (0.1% each side), DP charges, stamp duty and GST are not deducted in the journal P&L.
+- Costs such as STT (0.1% each side), DP charges, stamp duty and GST are not included in the review scores.
 
 ## Tests
 

@@ -25,12 +25,9 @@ class TradePlan:
 
 def build_plan(candidates: list[dict], reviews: dict[str, dict], market: dict, *,
                capital_per_trade: float, max_positions: int, available_funds: float,
-               stop_loss_pct: float, target_pct: float, realized_pnl_today: float,
-               max_daily_loss: float) -> tuple[list[TradePlan], list[str]]:
+               stop_loss_pct: float, target_pct: float) -> tuple[list[TradePlan], list[str]]:
     """Merge screener + agent output into sized orders. Agents can only remove trades, never add or resize them."""
     notes: list[str] = []
-    if realized_pnl_today <= -max_daily_loss:
-        return [], [f"Daily loss limit hit ({realized_pnl_today:.0f}); no new trades."]
     if not market.get("allow_new_positions", False):
         return [], ["Market-context agent blocked new positions: " + "; ".join(market.get("reasons", []))]
 

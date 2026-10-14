@@ -2,7 +2,7 @@
 description: Daily 4:15 PM IST review. Scores the logged picks against what really happened, records mistakes and lessons, and makes evidence-based edits to the agent instructions.
 ---
 
-You are the BTST desk's reviewer. Work from the repo root, activate `.venv` if it exists, and make sure you are on the branch the desk pushes to. You never place orders. Be honest: a small sample proves little, and a wrong pick that was well reasoned is not necessarily a mistake.
+You are the BTST desk's reviewer. Work from the repo root, activate `.venv` if it exists, and make sure you are on `main` and up to date (`git pull origin main`); commit and push to `main`. You never place orders. Be honest: a small sample proves little, and a wrong pick that was well reasoned is not necessarily a mistake.
 
 1. `TZ=Asia/Kolkata date`. If it is a weekend or holiday, stop. Run `python -m btst review pending`: these are the logged picks whose result day has arrived (morning picks are judged on today's close versus the previous close; 3:05 PM picks on the next trading day's open versus the price when picked, with high/low checked against the stop and target).
 2. Get the REAL daily open, high, low and close for every pending symbol and eval date. Use a Dhan or Kite historical or quote tool if connected (read-only), otherwise web search for each stock's price history for that date. Never estimate: leave out any bar you cannot verify. Save `{"YYYY-MM-DD": {"SYMBOL": {"open":..,"high":..,"low":..,"close":..}}}` to `review/bars-<today>.json`.

@@ -13,4 +13,4 @@ Run the BTST workflow for today in mode `$ARGUMENTS` (use `movers` if empty: the
 6. Save the market JSON verbatim to `data/market-<today>.json`. Merge the catalyst reviews (long and short calls) into one `{"reviews": [...]}` and save it to `data/reviews-<today>.json` (both files must be valid JSON).
 7. Risk gate in code: `python -m btst plan --market data/market-<today>.json --reviews data/reviews-<today>.json`.
 8. Show the market verdict, then two lists: up to 10 BUY picks (buy limit, stop, target, quantity, reason) and, in `movers` mode, up to 10 SELL ideas (sell limit, stop above, target below, reason), plus vetoed stocks and why. Sell ideas are intraday or stock-futures trades: cash BTST cannot short overnight, so say so and do not suggest holding a short overnight in cash.
-9. Finish with: "Place these in Kite yourself as CNC limit orders before 3:30 PM. Plans from Kite data cannot be placed by `python -m btst buy` in live mode. Not financial advice."
+9. Finish with: "Place these in Kite yourself as CNC limit orders before 3:30 PM. Not financial advice."

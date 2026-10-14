@@ -8,7 +8,6 @@ from zoneinfo import ZoneInfo
 from .config import Config
 from .dhan_client import Dhan, DhanError
 from .events import TYPES, Event, EventCalendar, filter_candidates, load_holidays
-from .journal import Journal
 from .kite_quotes import normalize_kite_quotes
 from .nse import NSE, sync_calendar
 from . import review as rv
@@ -17,10 +16,6 @@ from .screener import evaluate, mover_row, quote_screen, rank_movers, with_today
 
 IST = ZoneInfo("Asia/Kolkata")
 log = logging.getLogger("btst")
-
-
-def _mode(cfg: Config) -> str:
-    return "live" if cfg.live_trading else "paper"
 
 
 def _plan_path(cfg: Config, day: date):
@@ -109,19 +104,16 @@ def cmd_kite_screen(cfg: Config, args) -> None:
 
 
 def cmd_plan(cfg: Config, args) -> None:
-    """Risk gate on subagent output: shortlist + market + reviews JSON -> plan file that `buy` can place."""
+    """Risk gate on subagent output: shortlist + market + reviews JSON -> plan file."""
     today = datetime.now(IST).date()
     doc = json.loads(_shortlist_path(cfg, today).read_text())
     market = json.loads(open(args.market).read())
     reviews = normalize_reviews(json.loads(open(args.reviews).read()))
-    journal = Journal(cfg.data_dir / "journal.db")
-    funds = (Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir).available_funds()
-             if cfg.live_trading else cfg.capital_per_trade * cfg.max_positions)
+    funds = cfg.capital_per_trade * cfg.max_positions
     plans, notes = build_plan(
         doc["shortlist"], reviews, market,
         capital_per_trade=cfg.capital_per_trade, max_positions=cfg.max_positions, available_funds=funds,
         stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct,
-        realized_pnl_today=journal.realized_pnl(today), max_daily_loss=cfg.max_daily_loss,
     )
     sells, sell_notes = build_sell_ideas(doc.get("losers", []), reviews, max_ideas=cfg.max_sell_ideas,
                                          stop_loss_pct=cfg.stop_loss_pct, target_pct=cfg.target_pct)
@@ -134,7 +126,7 @@ def cmd_plan(cfg: Config, args) -> None:
     print(f"Market: {market.get('bias')}  new positions allowed: {market.get('allow_new_positions')}")
     for n in notes:
         print(f"  - {n}")
-    print(f"\nBTST plan ({_mode(cfg)} mode):")
+    print("\nBTST plan:")
     for pl in plans:
         print(f"  {pl.symbol:<12} qty {pl.qty:<5} buy<= {pl.entry_limit:<9} SL {pl.stop_loss:<9} "
               f"TGT {pl.target:<9} score {pl.final_score}\n      {pl.reason}")
@@ -143,12 +135,11 @@ def cmd_plan(cfg: Config, args) -> None:
     if doc.get("losers"):
         _print_sell_ideas(sells, len(doc["losers"]))
     if plans:
-        print("\nReview, then run:  python -m btst buy")
+        print("\nPlace these yourself as CNC limit orders. Not financial advice.")
 
 
 def cmd_scan(cfg: Config, args) -> None:
     dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir)
-    journal = Journal(cfg.data_dir / "journal.db")
     ids = dhan.security_ids(_universe(cfg))
     log.info("Fetching live quotes for %d stocks", len(ids))
     quotes = dhan.quotes(list(ids.values()))
@@ -197,7 +188,6 @@ def _print_sell_ideas(sells: list, n_losers: int) -> None:
 
 def cmd_movers(cfg: Config, args) -> None:
     dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir)
-    journal = Journal(cfg.data_dir / "journal.db")
     ids = dhan.security_ids(_universe(cfg))
     quotes = dhan.quotes(list(ids.values()))
     today = datetime.now(IST).date()
@@ -215,90 +205,6 @@ def cmd_movers(cfg: Config, args) -> None:
         return
 
     _write_shortlist(cfg, today, "movers", gainers, losers, notes, dhan.index_snapshot())
-
-
-def cmd_buy(cfg: Config, args) -> None:
-    today = datetime.now(IST).date()
-    path = _plan_path(cfg, today)
-    if not path.exists():
-        raise SystemExit("No plan for today. Run `python -m btst scan` first.")
-    plan_doc = json.loads(path.read_text())
-    plans = plan_doc["plans"]
-    if not plans:
-        raise SystemExit("Today's plan has no trades.")
-    if plan_doc.get("source") == "kite" and cfg.live_trading:
-        raise SystemExit("This plan came from Kite data and uses ticker symbols, but `buy` places orders through Dhan. "
-                         "Place these orders in Kite yourself, or run in paper mode.")
-
-    mode = _mode(cfg)
-    for p in plans:
-        print(f"{p['symbol']:<12} BUY {p['qty']} @ {p['entry_limit']}  (SL {p['stop_loss']}, TGT {p['target']})")
-    if not args.yes and input(f"\nPlace these {len(plans)} {mode.upper()} CNC orders? [y/N] ").strip().lower() != "y":
-        print("Aborted.")
-        return
-
-    dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir) if cfg.live_trading else None
-    journal = Journal(cfg.data_dir / "journal.db")
-    for p in plans:
-        order_id = None
-        if dhan:
-            order_id = dhan.place_order(p["security_id"], "BUY", p["qty"], p["entry_limit"], tag=f"btst-{today}")
-        journal.record_buy(mode, p, order_id)
-        print(f"{p['symbol']}: {'order ' + order_id if order_id else 'paper trade recorded'}")
-
-
-def _resolve_fills(dhan: Dhan, journal: Journal, trades) -> list:
-    live = []
-    for t in trades:
-        order = dhan.order_status(t["buy_order_id"])
-        order = order[0] if isinstance(order, list) else order
-        filled = int(order.get("filledQty") or 0)
-        if filled == 0:
-            journal.mark_unfilled(t["id"])
-            print(f"{t['symbol']}: buy order was not filled, skipping")
-            continue
-        journal.update_fill(t["id"], filled, float(order.get("averageTradedPrice") or t["entry_price"]))
-        live.append(t["id"])
-    return live
-
-
-def cmd_exit(cfg: Config, args) -> None:
-    mode = _mode(cfg)
-    journal = Journal(cfg.data_dir / "journal.db")
-    dhan = Dhan(cfg.dhan_client_id, cfg.dhan_access_token, cfg.data_dir)
-    today = datetime.now(IST).date()
-    trades = journal.open_trades(mode, bought_before=today)
-    if cfg.live_trading:
-        keep = set(_resolve_fills(dhan, journal, trades))
-        trades = [t for t in journal.open_trades(mode, bought_before=today) if t["id"] in keep]
-    if not trades:
-        print("No open BTST positions to exit.")
-        return
-
-    exit_h, exit_m = map(int, cfg.exit_by.split(":"))
-    open_trades = {t["id"]: t for t in trades}
-    print(f"Managing {len(open_trades)} {mode} positions until {cfg.exit_by} IST")
-
-    while open_trades:
-        now = datetime.now(IST)
-        time_up = (now.hour, now.minute) >= (exit_h, exit_m)
-        prices = dhan.ltp([t["security_id"] for t in open_trades.values()])
-        for tid, t in list(open_trades.items()):
-            ltp = prices.get(t["security_id"])
-            if ltp is None:
-                continue
-            reason = ("STOP_LOSS" if ltp <= t["stop_loss"] else "TARGET" if ltp >= t["target"]
-                      else "TIME_EXIT" if time_up else None)
-            if not reason:
-                continue
-            order_id = None
-            if cfg.live_trading:
-                order_id = dhan.place_order(t["security_id"], "SELL", t["qty"], None, tag=f"btst-exit-{today}")
-            journal.record_exit(tid, ltp, reason, order_id)
-            print(f"{t['symbol']}: {reason} at ~{ltp} ({(ltp - t['entry_price']) * t['qty']:+.0f})")
-            del open_trades[tid]
-        if open_trades:
-            time.sleep(args.poll)
 
 
 def cmd_calendar(cfg: Config, args) -> None:
@@ -354,16 +260,6 @@ def cmd_review(cfg: Config, args) -> None:
         print(rv.format_summary(rv.summarize(results, since)))
 
 
-def cmd_report(cfg: Config, args) -> None:
-    journal = Journal(cfg.data_dir / "journal.db")
-    rows = journal.summary()
-    if not rows:
-        print("No closed trades yet.")
-    for r in rows:
-        wins = r["wins"] or 0
-        print(f"{r['mode']:<6} trades {r['trades']:<4} win-rate {100 * wins / r['trades']:.0f}%  P&L {r['pnl']}")
-
-
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser(prog="btst", description="BTST trading helper: code screens and risk gate, Claude Code subagents review")
@@ -382,11 +278,6 @@ def main() -> None:
     pl = sub.add_parser("plan", help="Risk-gate subagent output (market + reviews JSON) into today's plan")
     pl.add_argument("--market", required=True, help="JSON: bias, allow_new_positions, reasons")
     pl.add_argument("--reviews", required=True, help='JSON: {"reviews":[{symbol,catalyst_score,veto,red_flags,summary}]}')
-    buy = sub.add_parser("buy", help="Place today's planned CNC buys after confirmation (before 3:30 PM)")
-    buy.add_argument("--yes", action="store_true", help="Skip the confirmation prompt")
-    ext = sub.add_parser("exit", help="Next morning: manage SL/target/time exits (start at 9:15 AM)")
-    ext.add_argument("--poll", type=int, default=15, help="Seconds between price checks")
-    sub.add_parser("report", help="Journal P&L summary")
     rev = sub.add_parser("review", help="Log picks and score them against what the market really did")
     rev_sub = rev.add_subparsers(dest="action", required=True)
     ra = rev_sub.add_parser("add", help="Log picks from a JSON list [{side,symbol,ref_price,stop,target,tags,reason}]")
@@ -418,4 +309,4 @@ def main() -> None:
 
     args = parser.parse_args()
     cfg = Config.from_env()
-    {"scan": cmd_scan, "movers": cmd_movers, "plan": cmd_plan, "kite-screen": cmd_kite_screen, "buy": cmd_buy, "exit": cmd_exit, "report": cmd_report, "calendar": cmd_calendar, "review": cmd_review}[args.command](cfg, args)
+    {"scan": cmd_scan, "movers": cmd_movers, "plan": cmd_plan, "kite-screen": cmd_kite_screen, "calendar": cmd_calendar, "review": cmd_review}[args.command](cfg, args)

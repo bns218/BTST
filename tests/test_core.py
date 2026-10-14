@@ -4,7 +4,6 @@ from types import SimpleNamespace
 import pandas as pd
 import pytest
 
-from btst.journal import Journal
 from btst.risk import build_plan, round_tick
 from btst.screener import evaluate, with_today
 
@@ -68,7 +67,7 @@ REVIEWS = {
     "CCC": {"catalyst_score": 1, "veto": True, "red_flags": ["results tomorrow"], "summary": ""},
 }
 RISK = dict(capital_per_trade=20000, max_positions=3, available_funds=100000,
-            stop_loss_pct=1.0, target_pct=2.0, realized_pnl_today=0, max_daily_loss=2000)
+            stop_loss_pct=1.0, target_pct=2.0)
 
 
 def test_plan_ranks_sizes_and_respects_veto():
@@ -85,27 +84,10 @@ def test_market_agent_can_block_everything():
     assert plans == [] and "US CPI" in notes[0]
 
 
-def test_daily_loss_limit_blocks():
-    plans, _ = build_plan(CANDIDATES, REVIEWS, {"allow_new_positions": True},
-                          **{**RISK, "realized_pnl_today": -2500})
-    assert plans == []
-
-
 def test_funds_cap_position_size():
     plans, _ = build_plan(CANDIDATES, REVIEWS, {"allow_new_positions": True},
                           **{**RISK, "available_funds": 25000})
     assert sum(p.qty * p.entry_limit for p in plans) <= 25000
-
-
-def test_journal_roundtrip(tmp_path):
-    j = Journal(tmp_path / "j.db")
-    plan = {"symbol": "AAA", "security_id": "1", "qty": 10, "entry_limit": 100.0,
-            "stop_loss": 99.0, "target": 102.0, "reason": "x"}
-    j.record_buy("paper", plan, None)
-    [t] = j.open_trades("paper", bought_before=date.today() + timedelta(days=1))
-    j.record_exit(t["id"], 102.0, "TARGET", None)
-    assert j.realized_pnl(date.today()) == 20.0
-    assert j.open_trades("paper", bought_before=date.today() + timedelta(days=1)) == []
 
 
 def _q(ltp, prev, hi, lo, vol, upper=None, lower=None, buy=100, sell=100):
