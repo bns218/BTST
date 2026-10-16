@@ -1,8 +1,8 @@
 {
   "name": "btst-agents",
-  "version": "1.0.0",
-  "description": "Research-only subagents for NSE F&O BTST work: market context, catalyst/event-risk review, morning brief and Kite-based exit advice. Never places orders.",
+  "version": "2.0.0",
+  "description": "Self-improving research subagents for NSE F&O BTST/STBT: 3:15 PM OI & earnings screener, 8:45 AM pre-market exit auditor, 3:45 PM real data reviewer & mistake learner, and macro risk shield. Never places orders.",
   "author": { "name": "bns218" },
   "repository": "https://github.com/bns218/BTST",
-  "keywords": ["btst", "nse", "trading", "research"]
+  "keywords": ["btst", "stbt", "nse", "fno", "trading", "learning-loop", "kite-mcp"]
 }
