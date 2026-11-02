@@ -1,15 +1,21 @@
 import urllib.request
 import json
+import os
 import sys
 
-SESSION_FILE = r"C:\Users\nagas\Desktop\BTST\data\.kite_session"
+# Session id comes from the KITE_MCP_SESSION environment variable or the
+# git-ignored data/.kite_session file. Never commit a session id.
+SESSION_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", ".kite_session")
 
 def get_session_id():
+    sid = os.environ.get("KITE_MCP_SESSION", "").strip()
+    if sid:
+        return sid
     try:
         with open(SESSION_FILE, "r") as f:
             return f.read().strip()
-    except Exception:
-        return "kitemcp-6040a88e-3c42-4345-835e-101cf0904c6f"
+    except OSError:
+        sys.exit("No Kite MCP session: set KITE_MCP_SESSION or write it to data/.kite_session")
 
 def call_kite_tool(tool_name, arguments={}):
     session_id = get_session_id()

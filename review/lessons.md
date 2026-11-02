@@ -10,8 +10,8 @@
 - **Rule 1.4 (Sector Alignment & Macro Gap Filter)**: Never take a standalone long BTST trade in a sector leader if the broader sectoral index is displaying divergence or negative breadth. If GIFT Nifty indicates a gap-down open (> -0.3%), reduce long BTST position sizing by 50% and prioritize Short Buildup (STBT) setups.
 - **Rule 1.5 (Strict 9:45 AM Time-Exit Discipline)**: If a carried BTST/STBT position fails to expand (> +1%) by 9:45 AM, immediately execute a market time-exit. Never carry a stagnant trade past 9:45 AM into the European open volatility window.
 - **Rule 1.6 (Board Meeting Postponement Squeeze Guardrail)**: When a corporate board meeting/earnings release is abruptly postponed near monthly derivative expiry (as occurred with Tata Steel), exercise extreme caution on fresh short positions. Postponements remove imminent downside event risk and frequently trigger aggressive institutional short-covering squeezes.
-- **Rule 1.7 (Pre-Expiry Exposure Balance & Hedged Pairs)**: On the eve of weekly/monthly derivative expiry (Tuesday/Wednesday before Thursday expiry), never deploy an unhedged 100% unidirectional Long BTST batch if macro indicators or index breadth are mixed. The screening agent must either select a balanced **Long/Short pair (1 BTST Long + 1 STBT Short)** to maintain delta neutrality or halve total overnight capital allocation.
-- **Rule 1.8 (Monthly Expiry Day Short-Covering Squeeze Guardrail)**: On the morning of monthly derivative expiry (last Thursday of the month), avoid taking STBT short positions on top-weighted Nifty 50 index heavyweights (such as Reliance, HDFC Bank, ICICI Bank) based purely on preceding breakdown OI. Expiry day rollover dynamics induce aggressive short-covering squeezes if the index opens resiliently or rolls over, reversing prior short accumulation.
+- **Rule 1.7 (Pre-Expiry Exposure Balance & Hedged Pairs)**: On the session before NSE stock/index derivative expiry (NSE expiry is currently on Tuesday since Sept 2025 — confirm the date on NSE's expiry calendar each month), never deploy an unhedged 100% unidirectional Long BTST batch if macro indicators or index breadth are mixed. The screening agent must either select a balanced **Long/Short pair (1 BTST Long + 1 STBT Short)** to maintain delta neutrality or halve total overnight capital allocation.
+- **Rule 1.8 (Monthly Expiry Day Short-Covering Squeeze Guardrail)**: On the morning of monthly derivative expiry (currently the last Tuesday of the month on NSE — confirm on NSE's expiry calendar), avoid taking STBT short positions on top-weighted Nifty 50 index heavyweights (such as Reliance, HDFC Bank, ICICI Bank) based purely on preceding breakdown OI. Expiry day rollover dynamics induce aggressive short-covering squeezes if the index opens resiliently or rolls over, reversing prior short accumulation.
 
 ---
 
@@ -29,6 +29,12 @@
 ## 3. Macro & Market Regime Rules
 - **Rule 3.1 (Elevated India VIX)**: When India VIX is above 18.0, reduce overall BTST position count by 50%. When VIX is above 22.0, completely suspend fresh overnight BTST long positions regardless of individual chart setups.
 - **Rule 3.2 (Binary Global Events)**: If a major binary event occurs overnight (e.g., US FOMC interest rate decision, US CPI release, Union Budget eve, Election results), suspend overnight carrying.
+
+---
+
+## 3b. Rule Hygiene (added 2026-11-02)
+- A lesson from a single trade is logged as an **Observation** only. It becomes a hard veto Rule only after the same pattern causes a loss at least twice, and the learner records the evidence (dates + symbols).
+- Dates and facts in lessons must come from verified data (Kite candles, exchange filings); do not cite events that were not confirmed.
 
 ---
 

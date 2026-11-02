@@ -9,7 +9,10 @@
       "date": "2026-10-29",
       "status": "HOLDING_OVERNIGHT",
       "count": 2,
-      "symbols": ["NSE:ADANIPORTS", "NSE:HEROMOTOCO"]
+      "symbols": [
+        "NSE:ADANIPORTS",
+        "NSE:HEROMOTOCO"
+      ]
     }
   ],
   "history": [
@@ -21,51 +24,60 @@
           "symbol": "NSE:WIPRO",
           "side": "BUY",
           "entry": 184.75,
-          "target": 188.40,
+          "target": 188.4,
           "stop": 182.85,
           "high": 189.75,
           "low": 183.72,
           "close": 189.17,
           "result": "WIN",
-          "return_percent": 2.70
+          "return_percent": 2.7,
+          "corrected_result": "STALE",
+          "corrected_return_percent": 1.98
         },
         {
           "symbol": "NSE:TECHM",
           "side": "BUY",
-          "entry": 1782.00,
-          "target": 1817.00,
-          "stop": 1763.50,
-          "high": 1834.70,
-          "low": 1790.00,
-          "close": 1834.70,
+          "entry": 1782.0,
+          "target": 1817.0,
+          "stop": 1763.5,
+          "high": 1834.7,
+          "low": 1790.0,
+          "close": 1834.7,
           "result": "WIN",
-          "return_percent": 2.96
+          "return_percent": 2.96,
+          "corrected_result": "STALE",
+          "corrected_return_percent": 1.96
         },
         {
           "symbol": "NSE:TCS",
           "side": "BUY",
-          "entry": 2468.00,
-          "target": 2516.50,
-          "stop": 2442.50,
-          "high": 2533.30,
-          "low": 2476.50,
-          "close": 2529.00,
+          "entry": 2468.0,
+          "target": 2516.5,
+          "stop": 2442.5,
+          "high": 2533.3,
+          "low": 2476.5,
+          "close": 2529.0,
           "result": "WIN",
-          "return_percent": 2.65
+          "return_percent": 2.65,
+          "corrected_result": "STALE",
+          "corrected_return_percent": 1.97
         },
         {
           "symbol": "NSE:NESTLEIND",
           "side": "SELL",
-          "entry": 1261.00,
-          "target": 1236.50,
-          "stop": 1274.50,
-          "high": 1251.60,
-          "low": 1205.50,
-          "close": 1223.90,
+          "entry": 1261.0,
+          "target": 1236.5,
+          "stop": 1274.5,
+          "high": 1251.6,
+          "low": 1205.5,
+          "close": 1223.9,
           "result": "WIN",
-          "return_percent": 4.40
+          "return_percent": 4.4,
+          "corrected_result": "STALE",
+          "corrected_return_percent": 1.94
         }
-      ]
+      ],
+      "corrected_note": "STALE: reviewed 3 sessions later"
     },
     {
       "batch_date": "2026-10-21",
@@ -74,28 +86,33 @@
         {
           "symbol": "NSE:BAJFINANCE",
           "side": "SELL",
-          "entry": 925.00,
-          "target": 906.50,
+          "entry": 925.0,
+          "target": 906.5,
           "stop": 934.25,
-          "high": 942.10,
-          "low": 907.40,
-          "close": 942.10,
+          "high": 942.1,
+          "low": 907.4,
+          "close": 942.1,
           "result": "WIN",
-          "return_percent": 1.90
+          "return_percent": 1.9,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": 1.9
         },
         {
           "symbol": "NSE:ULTRACEMCO",
           "side": "BUY",
-          "entry": 10850.00,
-          "target": 11067.00,
-          "stop": 10741.50,
-          "high": 10976.00,
-          "low": 10651.00,
-          "close": 10958.00,
+          "entry": 10850.0,
+          "target": 11067.0,
+          "stop": 10741.5,
+          "high": 10976.0,
+          "low": 10651.0,
+          "close": 10958.0,
           "result": "LOSS",
-          "return_percent": -1.00
+          "return_percent": -1.0,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": -1.0
         }
-      ]
+      ],
+      "corrected_note": "NOT_TRADABLE: picks generated at 16:10:00 IST, after the 15:30 close"
     },
     {
       "batch_date": "2026-10-22",
@@ -104,28 +121,33 @@
         {
           "symbol": "NSE:COALINDIA",
           "side": "SELL",
-          "entry": 401.50,
-          "target": 393.50,
-          "stop": 405.50,
+          "entry": 401.5,
+          "target": 393.5,
+          "stop": 405.5,
           "high": 403.35,
           "low": 390.65,
           "close": 397.45,
           "result": "WIN",
-          "return_percent": 2.00
+          "return_percent": 2.0,
+          "corrected_result": "WIN",
+          "corrected_return_percent": 1.99
         },
         {
           "symbol": "NSE:LT",
           "side": "BUY",
-          "entry": 3656.00,
-          "target": 3729.00,
-          "stop": 3619.50,
-          "high": 3663.90,
-          "low": 3596.80,
-          "close": 3647.00,
+          "entry": 3656.0,
+          "target": 3729.0,
+          "stop": 3619.5,
+          "high": 3663.9,
+          "low": 3596.8,
+          "close": 3647.0,
           "result": "SCRATCH",
-          "return_percent": -0.38
+          "return_percent": -0.38,
+          "corrected_result": "SCRATCH",
+          "corrected_return_percent": -0.38
         }
-      ]
+      ],
+      "corrected_note": "ok"
     },
     {
       "batch_date": "2026-10-23",
@@ -134,28 +156,33 @@
         {
           "symbol": "NSE:NTPC",
           "side": "SELL",
-          "entry": 296.50,
-          "target": 290.50,
-          "stop": 299.50,
-          "high": 301.40,
-          "low": 294.10,
-          "close": 300.00,
+          "entry": 296.5,
+          "target": 290.5,
+          "stop": 299.5,
+          "high": 301.4,
+          "low": 294.1,
+          "close": 300.0,
           "result": "WIN",
-          "return_percent": 0.85
+          "return_percent": 0.85,
+          "corrected_result": "SCRATCH",
+          "corrected_return_percent": 0.85
         },
         {
           "symbol": "NSE:TATASTEEL",
           "side": "SELL",
-          "entry": 166.80,
+          "entry": 166.8,
           "target": 163.45,
-          "stop": 168.50,
+          "stop": 168.5,
           "high": 169.94,
           "low": 165.51,
           "close": 169.94,
           "result": "SCRATCH",
-          "return_percent": -0.30
+          "return_percent": -0.3,
+          "corrected_result": "SCRATCH",
+          "corrected_return_percent": -0.3
         }
-      ]
+      ],
+      "corrected_note": "ok"
     },
     {
       "batch_date": "2026-10-26",
@@ -164,28 +191,33 @@
         {
           "symbol": "NSE:DRREDDY",
           "side": "BUY",
-          "entry": 1314.00,
-          "target": 1340.00,
-          "stop": 1300.50,
-          "high": 1323.70,
-          "low": 1299.40,
-          "close": 1310.00,
+          "entry": 1314.0,
+          "target": 1340.0,
+          "stop": 1300.5,
+          "high": 1323.7,
+          "low": 1299.4,
+          "close": 1310.0,
           "result": "WIN",
-          "return_percent": 0.30
+          "return_percent": 0.3,
+          "corrected_result": "SCRATCH",
+          "corrected_return_percent": 0.3
         },
         {
           "symbol": "NSE:SHRIRAMFIN",
           "side": "SELL",
-          "entry": 824.00,
-          "target": 807.50,
+          "entry": 824.0,
+          "target": 807.5,
           "stop": 832.25,
-          "high": 841.70,
-          "low": 819.00,
-          "close": 823.60,
+          "high": 841.7,
+          "low": 819.0,
+          "close": 823.6,
           "result": "LOSS",
-          "return_percent": -1.00
+          "return_percent": -1.0,
+          "corrected_result": "LOSS",
+          "corrected_return_percent": -1.0
         }
-      ]
+      ],
+      "corrected_note": "ok"
     },
     {
       "batch_date": "2026-10-27",
@@ -194,28 +226,33 @@
         {
           "symbol": "NSE:TATACONSUM",
           "side": "BUY",
-          "entry": 1000.00,
-          "target": 1022.00,
-          "stop": 988.00,
-          "high": 1005.00,
-          "low": 962.10,
-          "close": 1000.20,
+          "entry": 1000.0,
+          "target": 1022.0,
+          "stop": 988.0,
+          "high": 1005.0,
+          "low": 962.1,
+          "close": 1000.2,
           "result": "LOSS",
-          "return_percent": -1.20
+          "return_percent": -1.2,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": -1.2
         },
         {
           "symbol": "NSE:BHARTIARTL",
           "side": "BUY",
-          "entry": 1978.80,
-          "target": 2015.00,
-          "stop": 1955.00,
-          "high": 1970.80,
-          "low": 1926.60,
-          "close": 1948.10,
+          "entry": 1978.8,
+          "target": 2015.0,
+          "stop": 1955.0,
+          "high": 1970.8,
+          "low": 1926.6,
+          "close": 1948.1,
           "result": "LOSS",
-          "return_percent": -1.20
+          "return_percent": -1.2,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": -1.2
         }
-      ]
+      ],
+      "corrected_note": "NOT_TRADABLE: picks generated at 18:21:45 IST, after the 15:30 close"
     },
     {
       "batch_date": "2026-10-28",
@@ -224,28 +261,43 @@
         {
           "symbol": "NSE:LT",
           "side": "BUY",
-          "entry": 3801.30,
-          "target": 3875.00,
-          "stop": 3760.00,
-          "high": 3844.00,
-          "low": 3765.60,
-          "close": 3837.10,
+          "entry": 3801.3,
+          "target": 3875.0,
+          "stop": 3760.0,
+          "high": 3844.0,
+          "low": 3765.6,
+          "close": 3837.1,
           "result": "SCRATCH",
-          "return_percent": -0.82
+          "return_percent": -0.82,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": -0.82
         },
         {
           "symbol": "NSE:RELIANCE",
           "side": "SELL",
-          "entry": 1158.00,
-          "target": 1138.00,
-          "stop": 1170.00,
-          "high": 1182.10,
-          "low": 1155.60,
-          "close": 1167.40,
+          "entry": 1158.0,
+          "target": 1138.0,
+          "stop": 1170.0,
+          "high": 1182.1,
+          "low": 1155.6,
+          "close": 1167.4,
           "result": "LOSS",
-          "return_percent": -1.03
+          "return_percent": -1.03,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": -1.03
         }
-      ]
+      ],
+      "corrected_note": "NOT_TRADABLE: picks generated at 19:14:30 IST, after the 15:30 close"
     }
-  ]
+  ],
+  "corrected_metrics": {
+    "as_of": "2026-11-02",
+    "method": "WIN only if target touched; returns capped at target/stop; picks generated after 15:30 IST excluded as NOT_TRADABLE; batches reviewed later than next trading day excluded as STALE",
+    "tradable_trades": 6,
+    "wins": 1,
+    "losses": 1,
+    "scratches": 4,
+    "win_rate_percent": 16.7,
+    "average_return_percent": 0.24
+  }
 }

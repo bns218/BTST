@@ -17,14 +17,14 @@ Research only. Nothing here places orders; you execute any trades yourself. Not 
 
 ## 2. Connect Zerodha Kite MCP
 - Settings -> Connectors -> add Zerodha Kite (`https://mcp.kite.trade/mcp`) and authenticate each morning.
-- Tools used: `mcp__kite__get_ltp`, `mcp__kite__get_ohlc`, `mcp__kite__get_quotes`, `mcp__kite__get_holdings`, `mcp__kite__get_positions`.
+- Tools used: `mcp__Kite_mcp__get_ltp`, `mcp__Kite_mcp__get_ohlc`, `mcp__Kite_mcp__get_quotes`, `mcp__Kite_mcp__get_holdings`, `mcp__Kite_mcp__get_positions`.
 
 ---
 
 ## 3. Daily Scheduled Tasks & Prompts (Weekdays, IST)
 
 ### **Cycle 1: 3:15 PM IST (BTST Selection)**
-> Run `btst-screener-315pm`. First check `review/lessons.md` for negative rules. Using Kite quotes, screen today's top NSE F&O gainers and losers. Filter for Long Buildup (Price ↑ + OI ↑) and veto Short Covering. Confirm price is closing in the upper 15% of the day's range. Veto any stock with quarterly results today or tomorrow, or on the F&O ban list. Save up to 5 buys and 5 sell ideas with stop -1% and target +2% to `data/picks-<date>.json`.
+> Run `btst-screener-315pm`. First check `review/lessons.md` for negative rules. Using Kite quotes, screen today's top NSE F&O gainers and losers. Filter for Long Buildup (Price ↑ + OI ↑) and veto Short Covering. Confirm price is closing in the upper 15% of the day's range. Veto any stock with quarterly results today or tomorrow, or on the F&O ban list. Save up to 10 buys and 10 sell ideas with stop -1% and target +2% to `data/picks-<date>.json`.
 
 ### **Cycle 2: 8:45 AM IST Next Day (Pre-Market Audit & Exit Plan)**
 > Run `btst-morning-845am`. Load yesterday's `data/picks-<date>.json`. Research GIFT Nifty, US close, Asian markets, overnight stock news, and today's NSE F&O ban list. Formulate the 9:15–9:45 AM exit directives (SELL AT OPEN if target reached or stop broken; HOLD TO 9:45 otherwise). Save the brief to `data/brief-<date>.md`.

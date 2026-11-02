@@ -38,7 +38,7 @@ A self-improving, research-only autonomous subagent workflow for Indian Equities
 ---
 
 ## 1. Cycle 1: 3:15 PM IST — Stock Selection
-**Objective**: Identify up to 5 top-conviction BTST buys and up to 5 STBT sells for the next trading day.
+**Objective**: Identify up to 10 top-conviction BTST buys and up to 10 STBT sells for the next trading day.
 
 **Prompt to Run**:
 > `Run btst-screener-315pm. Read review/lessons.md first. Scan top NSE F&O gainers and losers using Kite quotes, filter for Long Buildup (Price ↑ + OI ↑), verify day's high closing strength, and veto any stock with quarterly earnings today or tomorrow. Save the result to data/picks-<today-date>.json.`
