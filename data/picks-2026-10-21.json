@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-21",
+  "generated_at": "16:10:00 IST",
+  "market_bias": "cautious_bullish",
+  "india_vix": 15.68,
+  "nifty_50_ltp": 22811.35,
+  "allow_new_positions": true,
+  "picks": [
+    {
+      "symbol": "NSE:ULTRACEMCO",
+      "side": "BUY",
+      "instrument_type": "EQUITY_BTST",
+      "current_price": 10849.00,
+      "day_high": 10959.00,
+      "day_low": 10717.00,
+      "close_range_percent": 87.6,
+      "price_change_percent": 2.22,
+      "oi_change_contracts": 98000,
+      "derivative_buildup": "Long Buildup",
+      "entry_limit": 10850.00,
+      "stop_loss": 10741.50,
+      "target": 11067.00,
+      "catalyst_summary": "Q2 results declared Oct 19 (overhang 100% cleared); strong institutional buying closing in top 15% of range; October futures OI at day's high (+98k contracts).",
+      "expected_direction": "bullish_continuation"
+    },
+    {
+      "symbol": "NSE:BAJFINANCE",
+      "side": "SELL",
+      "instrument_type": "FUTURES_STBT",
+      "current_price": 926.00,
+      "day_high": 968.80,
+      "day_low": 918.70,
+      "close_range_percent": 14.6,
+      "price_change_percent": -3.27,
+      "oi_change_contracts": 4938750,
+      "derivative_buildup": "Short Buildup",
+      "entry_limit": 925.00,
+      "stop_loss": 934.25,
+      "target": 906.50,
+      "catalyst_summary": "Post-earnings weakness from Oct 19 results; heavy fresh shorting with massive +4.93M contract OI addition closing at day's high; price closing in lower 15% of range.",
+      "expected_direction": "bearish_continuation"
+    }
+  ]
+}

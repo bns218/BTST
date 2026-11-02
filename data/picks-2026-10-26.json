@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-26",
+  "generated_at": "15:16:30 IST",
+  "market_bias": "mildly_bullish",
+  "india_vix": 17.23,
+  "nifty_50_ltp": 22717.05,
+  "allow_new_positions": true,
+  "picks": [
+    {
+      "symbol": "NSE:DRREDDY",
+      "side": "BUY",
+      "instrument_type": "EQUITY_BTST",
+      "current_price": 1313.30,
+      "day_high": 1319.00,
+      "day_low": 1224.00,
+      "close_range_percent": 94.0,
+      "price_change_percent": 6.82,
+      "oi_change_contracts": 154375,
+      "derivative_buildup": "Long Buildup",
+      "entry_limit": 1314.00,
+      "stop_loss": 1300.50,
+      "target": 1340.00,
+      "catalyst_summary": "Post-earnings institutional breakout following Q2 FY27 results declared Oct 23; zero binary event risk; trading at 94% of day's range (closing right at Day's High); fresh October futures accumulation.",
+      "expected_direction": "bullish_continuation"
+    },
+    {
+      "symbol": "NSE:SHRIRAMFIN",
+      "side": "SELL",
+      "instrument_type": "FUTURES_STBT",
+      "current_price": 823.45,
+      "day_high": 836.00,
+      "day_low": 810.20,
+      "close_range_percent": 51.3,
+      "price_change_percent": -4.80,
+      "oi_change_contracts": 2491500,
+      "derivative_buildup": "Short Buildup",
+      "entry_limit": 824.00,
+      "stop_loss": 832.25,
+      "target": 807.50,
+      "catalyst_summary": "Sell-the-news profit booking post-Q2 results (declared Oct 23); heavy fresh short buildup with massive +2.49M contract futures OI addition near day's peak (14.9M OI); persistent NBFC selling pressure.",
+      "expected_direction": "bearish_continuation"
+    }
+  ]
+}

@@ -1,8 +1,251 @@
 {
-  "total_trades": 0,
-  "successful_trades": 0,
-  "failed_trades": 0,
-  "win_rate_percent": 0.0,
-  "average_return_percent": 0.0,
-  "history": []
+  "total_trades_completed": 16,
+  "successful_trades": 8,
+  "failed_trades": 8,
+  "win_rate_percent": 50.0,
+  "average_return_percent": 0.68,
+  "active_tracked_batches": [
+    {
+      "date": "2026-10-29",
+      "status": "HOLDING_OVERNIGHT",
+      "count": 2,
+      "symbols": ["NSE:ADANIPORTS", "NSE:HEROMOTOCO"]
+    }
+  ],
+  "history": [
+    {
+      "batch_date": "2026-10-16",
+      "review_date": "2026-10-21",
+      "trades": [
+        {
+          "symbol": "NSE:WIPRO",
+          "side": "BUY",
+          "entry": 184.75,
+          "target": 188.40,
+          "stop": 182.85,
+          "high": 189.75,
+          "low": 183.72,
+          "close": 189.17,
+          "result": "WIN",
+          "return_percent": 2.70
+        },
+        {
+          "symbol": "NSE:TECHM",
+          "side": "BUY",
+          "entry": 1782.00,
+          "target": 1817.00,
+          "stop": 1763.50,
+          "high": 1834.70,
+          "low": 1790.00,
+          "close": 1834.70,
+          "result": "WIN",
+          "return_percent": 2.96
+        },
+        {
+          "symbol": "NSE:TCS",
+          "side": "BUY",
+          "entry": 2468.00,
+          "target": 2516.50,
+          "stop": 2442.50,
+          "high": 2533.30,
+          "low": 2476.50,
+          "close": 2529.00,
+          "result": "WIN",
+          "return_percent": 2.65
+        },
+        {
+          "symbol": "NSE:NESTLEIND",
+          "side": "SELL",
+          "entry": 1261.00,
+          "target": 1236.50,
+          "stop": 1274.50,
+          "high": 1251.60,
+          "low": 1205.50,
+          "close": 1223.90,
+          "result": "WIN",
+          "return_percent": 4.40
+        }
+      ]
+    },
+    {
+      "batch_date": "2026-10-21",
+      "review_date": "2026-10-22",
+      "trades": [
+        {
+          "symbol": "NSE:BAJFINANCE",
+          "side": "SELL",
+          "entry": 925.00,
+          "target": 906.50,
+          "stop": 934.25,
+          "high": 942.10,
+          "low": 907.40,
+          "close": 942.10,
+          "result": "WIN",
+          "return_percent": 1.90
+        },
+        {
+          "symbol": "NSE:ULTRACEMCO",
+          "side": "BUY",
+          "entry": 10850.00,
+          "target": 11067.00,
+          "stop": 10741.50,
+          "high": 10976.00,
+          "low": 10651.00,
+          "close": 10958.00,
+          "result": "LOSS",
+          "return_percent": -1.00
+        }
+      ]
+    },
+    {
+      "batch_date": "2026-10-22",
+      "review_date": "2026-10-23",
+      "trades": [
+        {
+          "symbol": "NSE:COALINDIA",
+          "side": "SELL",
+          "entry": 401.50,
+          "target": 393.50,
+          "stop": 405.50,
+          "high": 403.35,
+          "low": 390.65,
+          "close": 397.45,
+          "result": "WIN",
+          "return_percent": 2.00
+        },
+        {
+          "symbol": "NSE:LT",
+          "side": "BUY",
+          "entry": 3656.00,
+          "target": 3729.00,
+          "stop": 3619.50,
+          "high": 3663.90,
+          "low": 3596.80,
+          "close": 3647.00,
+          "result": "SCRATCH",
+          "return_percent": -0.38
+        }
+      ]
+    },
+    {
+      "batch_date": "2026-10-23",
+      "review_date": "2026-10-26",
+      "trades": [
+        {
+          "symbol": "NSE:NTPC",
+          "side": "SELL",
+          "entry": 296.50,
+          "target": 290.50,
+          "stop": 299.50,
+          "high": 301.40,
+          "low": 294.10,
+          "close": 300.00,
+          "result": "WIN",
+          "return_percent": 0.85
+        },
+        {
+          "symbol": "NSE:TATASTEEL",
+          "side": "SELL",
+          "entry": 166.80,
+          "target": 163.45,
+          "stop": 168.50,
+          "high": 169.94,
+          "low": 165.51,
+          "close": 169.94,
+          "result": "SCRATCH",
+          "return_percent": -0.30
+        }
+      ]
+    },
+    {
+      "batch_date": "2026-10-26",
+      "review_date": "2026-10-27",
+      "trades": [
+        {
+          "symbol": "NSE:DRREDDY",
+          "side": "BUY",
+          "entry": 1314.00,
+          "target": 1340.00,
+          "stop": 1300.50,
+          "high": 1323.70,
+          "low": 1299.40,
+          "close": 1310.00,
+          "result": "WIN",
+          "return_percent": 0.30
+        },
+        {
+          "symbol": "NSE:SHRIRAMFIN",
+          "side": "SELL",
+          "entry": 824.00,
+          "target": 807.50,
+          "stop": 832.25,
+          "high": 841.70,
+          "low": 819.00,
+          "close": 823.60,
+          "result": "LOSS",
+          "return_percent": -1.00
+        }
+      ]
+    },
+    {
+      "batch_date": "2026-10-27",
+      "review_date": "2026-10-28",
+      "trades": [
+        {
+          "symbol": "NSE:TATACONSUM",
+          "side": "BUY",
+          "entry": 1000.00,
+          "target": 1022.00,
+          "stop": 988.00,
+          "high": 1005.00,
+          "low": 962.10,
+          "close": 1000.20,
+          "result": "LOSS",
+          "return_percent": -1.20
+        },
+        {
+          "symbol": "NSE:BHARTIARTL",
+          "side": "BUY",
+          "entry": 1978.80,
+          "target": 2015.00,
+          "stop": 1955.00,
+          "high": 1970.80,
+          "low": 1926.60,
+          "close": 1948.10,
+          "result": "LOSS",
+          "return_percent": -1.20
+        }
+      ]
+    },
+    {
+      "batch_date": "2026-10-28",
+      "review_date": "2026-10-29",
+      "trades": [
+        {
+          "symbol": "NSE:LT",
+          "side": "BUY",
+          "entry": 3801.30,
+          "target": 3875.00,
+          "stop": 3760.00,
+          "high": 3844.00,
+          "low": 3765.60,
+          "close": 3837.10,
+          "result": "SCRATCH",
+          "return_percent": -0.82
+        },
+        {
+          "symbol": "NSE:RELIANCE",
+          "side": "SELL",
+          "entry": 1158.00,
+          "target": 1138.00,
+          "stop": 1170.00,
+          "high": 1182.10,
+          "low": 1155.60,
+          "close": 1167.40,
+          "result": "LOSS",
+          "return_percent": -1.03
+        }
+      ]
+    }
+  ]
 }

@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-29",
+  "generated_at": "19:05:40 IST",
+  "market_bias": "mildly_bullish_hedged",
+  "india_vix": 15.12,
+  "nifty_50_ltp": 22936.75,
+  "allow_new_positions": true,
+  "picks": [
+    {
+      "symbol": "NSE:ADANIPORTS",
+      "side": "BUY",
+      "instrument_type": "EQUITY_BTST",
+      "current_price": 1872.00,
+      "day_high": 1872.00,
+      "day_low": 1775.10,
+      "close_range_percent": 100.0,
+      "price_change_percent": 6.28,
+      "oi_change_contracts": 1422150,
+      "derivative_buildup": "Long Buildup",
+      "entry_limit": 1872.00,
+      "stop_loss": 1850.00,
+      "target": 1912.00,
+      "catalyst_summary": "Post-earnings institutional surge following Q2 FY27 earnings declared Oct 28 (+18% profit beat & upgraded FY27 guidance); closed at absolute Day's High (100% candle position); massive November futures accumulation (+1.42M contracts OI); ports & logistics sector leadership.",
+      "expected_direction": "bullish_continuation"
+    },
+    {
+      "symbol": "NSE:HEROMOTOCO",
+      "side": "SELL",
+      "instrument_type": "FUTURES_STBT",
+      "current_price": 5105.00,
+      "day_high": 5412.00,
+      "day_low": 5095.00,
+      "close_range_percent": 3.1,
+      "price_change_percent": -3.64,
+      "oi_change_contracts": 489300,
+      "derivative_buildup": "Short Buildup",
+      "entry_limit": 5105.00,
+      "stop_loss": 5160.00,
+      "target": 5015.00,
+      "catalyst_summary": "Persistent institutional breakdown post-Q2 results (declared Oct 28); closed at absolute Day's Low (3.1% candle position); heavy November futures short addition (+489k contracts OI); distinct two-wheeler auto sectoral weakness.",
+      "expected_direction": "bearish_continuation"
+    }
+  ]
+}

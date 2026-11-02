@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-28",
+  "generated_at": "19:14:30 IST",
+  "market_bias": "neutral_hedged",
+  "india_vix": 16.25,
+  "nifty_50_ltp": 22698.85,
+  "allow_new_positions": true,
+  "picks": [
+    {
+      "symbol": "NSE:LT",
+      "side": "BUY",
+      "instrument_type": "EQUITY_BTST",
+      "current_price": 3801.30,
+      "day_high": 3894.00,
+      "day_low": 3770.00,
+      "close_range_percent": 75.2,
+      "price_change_percent": 3.72,
+      "oi_change_contracts": 617925,
+      "derivative_buildup": "Long Buildup",
+      "entry_limit": 3801.30,
+      "stop_loss": 3760.00,
+      "target": 3875.00,
+      "catalyst_summary": "Post-earnings institutional accumulation following blowout Q2 FY27 earnings; zero binary event risk remaining; November futures added +617k contracts OI; clear sector leadership in capital goods amidst broader market weakness.",
+      "expected_direction": "bullish_continuation"
+    },
+    {
+      "symbol": "NSE:RELIANCE",
+      "side": "SELL",
+      "instrument_type": "FUTURES_STBT",
+      "current_price": 1158.00,
+      "day_high": 1204.30,
+      "day_low": 1156.40,
+      "close_range_percent": 3.3,
+      "price_change_percent": -3.19,
+      "oi_change_contracts": 11604500,
+      "derivative_buildup": "Short Buildup",
+      "entry_limit": 1158.00,
+      "stop_loss": 1170.00,
+      "target": 1138.00,
+      "catalyst_summary": "Aggressive institutional short buildup (+11.6M contracts in Nov futures); closed right at absolute Day's Low (3.3% range position); post-Jio listing profit-booking wave; Q2 board meeting on Oct 30 (zero binary event tomorrow); zero dividend risk.",
+      "expected_direction": "bearish_continuation"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-23",
+  "generated_at": "15:16:30 IST",
+  "market_bias": "bearish_cautious",
+  "india_vix": 16.92,
+  "nifty_50_ltp": 22516.40,
+  "allow_new_positions": true,
+  "picks": [
+    {
+      "symbol": "NSE:TATASTEEL",
+      "side": "SELL",
+      "instrument_type": "FUTURES_STBT",
+      "current_price": 166.95,
+      "day_high": 171.35,
+      "day_low": 163.41,
+      "close_range_percent": 44.5,
+      "price_change_percent": -3.12,
+      "oi_change_contracts": 5159000,
+      "derivative_buildup": "Short Buildup",
+      "entry_limit": 166.80,
+      "stop_loss": 168.50,
+      "target": 163.45,
+      "catalyst_summary": "Q2 results scheduled Oct 27 (clean overnight window); persistent institutional selling in metal sector; October futures added +5.15M contracts to open interest closing at day's high (202.4M OI).",
+      "expected_direction": "bearish_continuation"
+    },
+    {
+      "symbol": "NSE:NTPC",
+      "side": "SELL",
+      "instrument_type": "FUTURES_STBT",
+      "current_price": 297.40,
+      "day_high": 302.80,
+      "day_low": 292.05,
+      "close_range_percent": 49.7,
+      "price_change_percent": -1.71,
+      "oi_change_contracts": 1639500,
+      "derivative_buildup": "Short Buildup",
+      "entry_limit": 296.50,
+      "stop_loss": 299.50,
+      "target": 290.50,
+      "catalyst_summary": "PSU power sector facing severe weekly profit-taking; clean calendar (NTPC Green board meet on Oct 30); futures open interest expanded +1.6M contracts on price breakdown.",
+      "expected_direction": "bearish_continuation"
+    }
+  ]
+}
