@@ -1,0 +1,238 @@
+{
+  "date": "2026-11-02",
+  "generated_at": "09:15:00 IST",
+  "generated_at_note": "Approximate. Run began about 08:55 IST on 2026-11-03; the agent has no clock tool, so the exact time was not read.",
+  "basis": "2026-11-02 close (reference, not a live 3:15 PM list)",
+  "market_bias": "bullish",
+  "allow_new_positions": true,
+  "shield": {
+    "vix": 15.66,
+    "max_recommended_positions": 4,
+    "source": "/home/claude/btst/data/shield-2026-11-02.json (as supplied by caller)"
+  },
+  "limitations": [
+    "No shell or code-execution tool was available. All volume averages, RSI, OI changes and prices were computed by hand from raw Kite JSON, not in code.",
+    "Universe was a hand-typed list of about 195 F&O underlyings (search_instruments output exceeded size limits and could not be parsed without a shell), so some F&O stocks were never scanned.",
+    "RSI(14) is the simple-average (Cutler) variant over the last 15 closes, not Wilder smoothing. EMA20/EMA50 were estimated by eye from the daily candles, not computed.",
+    "Option-chain PCR and support/resistance use only the 6 to 8 strikes sampled around spot, not the full chain.",
+    "Results dates for OIL and NBCC were NOT confirmed for Nov 2026. Rule 2.1 is unverified for them."
+  ],
+  "picks": [
+    {
+      "symbol": "NSE:JINDALSTEL",
+      "side": "BUY",
+      "instrument_type": "EQUITY_BTST",
+      "current_price": 1102.0,
+      "day_high": 1106.1,
+      "day_low": 1060.0,
+      "close_range_percent": 91.1,
+      "price_change_percent": 3.84,
+      "oi_change_percent": 6.07,
+      "volume_x_avg": 1.91,
+      "rsi14": 73.0,
+      "sector": "Metal",
+      "option_support": 1100.0,
+      "option_resistance": 1140.0,
+      "score": 77,
+      "tradable": false,
+      "derivative_buildup": "Long Buildup",
+      "entry_limit": 1102.0,
+      "stop_loss": 1091.0,
+      "target": 1124.05,
+      "catalyst_summary": "No same-day company news found. Q2 FY27 results were scheduled for 23 Oct 2026, so no results risk (https://www.multibagg.ai/market-pulse/articles/jindal-steel-q2fy27-results-preview-cmvksgqyp000u27mj5nov1eoq). Move driven by strong Metal sector on 2 Nov.",
+      "expected_direction": "bullish_continuation",
+      "basis": "2026-11-02 close (reference, not a live 3:15 PM list)",
+      "notes": "Prev close 1061.2. Fut OI 16.23M vs 15.30M on 30 Oct. Sampled PCR 0.78. RSI 73 is near the top of the 55-75 band. Close is above EMA20 and about at or just above EMA50 (estimated)."
+    },
+    {
+      "symbol": "NSE:OIL",
+      "side": "BUY",
+      "instrument_type": "EQUITY_BTST",
+      "current_price": 461.9,
+      "day_high": 464.4,
+      "day_low": 446.0,
+      "close_range_percent": 86.4,
+      "price_change_percent": 1.74,
+      "oi_change_percent": 7.12,
+      "volume_x_avg": 2.29,
+      "rsi14": 65.7,
+      "sector": "Oil & Gas",
+      "option_support": 450.0,
+      "option_resistance": 480.0,
+      "score": 75,
+      "tradable": false,
+      "derivative_buildup": "Long Buildup",
+      "entry_limit": 461.9,
+      "stop_loss": 457.3,
+      "target": 471.15,
+      "catalyst_summary": "No same-day company news found. Q2 FY27 results date NOT confirmed (not filed as of 15 Sep 2026; listing deadline 14 Nov) per https://univest.in/blogs/oil-india-q2-results-fy27-preview-date-expectations. Sector tailwind: Oil & Gas strongest sector on 2 Nov.",
+      "expected_direction": "bullish_continuation",
+      "basis": "2026-11-02 close (reference, not a live 3:15 PM list)",
+      "notes": "Prev close 454.0. Day open 450.0, low 446.0, so the range is wide relative to a 1% stop. Fut OI 10.40M vs 9.71M. Sampled PCR 0.67 (call OI heavy at 460/480). Price near EMA50 (estimated). Confirm no results announcement on 3 Nov before use."
+    },
+    {
+      "symbol": "NSE:NBCC",
+      "side": "BUY",
+      "instrument_type": "EQUITY_BTST",
+      "current_price": 76.13,
+      "day_high": 76.5,
+      "day_low": 70.01,
+      "close_range_percent": 94.3,
+      "price_change_percent": 9.29,
+      "oi_change_percent": 3.57,
+      "volume_x_avg": 3.99,
+      "rsi14": 50.4,
+      "sector": "Construction / PSU",
+      "option_support": 72.0,
+      "option_resistance": 80.0,
+      "score": 59,
+      "tradable": false,
+      "derivative_buildup": "Long Buildup",
+      "entry_limit": 76.13,
+      "stop_loss": 75.37,
+      "target": 77.65,
+      "catalyst_summary": "No same-day catalyst found in searches. Q2 FY27 results date NOT confirmed (last year the board met 13 Nov 2025: https://www.investywise.com/?p=23426). Weakest pick: RSI 50 is outside the 55-75 band and price is below EMA50.",
+      "expected_direction": "bullish_continuation",
+      "basis": "2026-11-02 close (reference, not a live 3:15 PM list)",
+      "notes": "Prev close 69.66; a 9.3% one-day spike after a long downtrend (about 94 to 68 since Aug). Fut OI 86.83M vs 83.84M. Sampled PCR 0.53 with 22.6 lakh call OI at 80 (resistance). A 1% stop is only 0.76 rupees. Gap-and-fade risk is high."
+    },
+    {
+      "symbol": "NSE:POLICYBZR",
+      "side": "SELL",
+      "instrument_type": "FUTURES_STBT",
+      "current_price": 931.0,
+      "day_high": 1017.4,
+      "day_low": 923.3,
+      "close_range_percent": 8.2,
+      "price_change_percent": -6.91,
+      "oi_change_percent": 12.89,
+      "volume_x_avg": 2.55,
+      "rsi14": 32.5,
+      "sector": "Financial Services (fintech / insurance distribution)",
+      "option_support": 900.0,
+      "option_resistance": 940.0,
+      "score": 81,
+      "tradable": false,
+      "derivative_buildup": "Short Buildup",
+      "entry_limit": 931.0,
+      "stop_loss": 940.3,
+      "target": 912.4,
+      "catalyst_summary": "Cause of the 2 Nov fall NOT identified; no sourced news found. Q2 FY27 results already reported in Oct 2026 (profit +43% to Rs 192 crore, per search result https://yourstory.com/2026/10/pb-fintech-net-profit-rises-43-rise-in-net-profit; the page itself could not be fetched, so the exact date is unverified). No dividend record-date risk identified.",
+      "expected_direction": "bearish_continuation",
+      "basis": "2026-11-02 close (reference, not a live 3:15 PM list)",
+      "notes": "Prev close 1000.1; opened 1014.9 and sold off to the low, closed 8% of range. Fut OI 18.66M vs 16.53M. Sampled PCR 0.68, put OI heavy at 900 (988k) which may cushion the fall. Fut close 932.8, basis +0.19%. After a 7% drop a technical bounce is possible; undefined catalyst."
+    }
+  ],
+  "vetoed": [
+    {
+      "symbol": "KAYNES",
+      "reason": "F&O ban (caller list). Not scanned."
+    },
+    {
+      "symbol": "SAIL",
+      "reason": "F&O ban (caller list). Not scanned."
+    },
+    {
+      "symbol": "BANDHANBNK, MANAPPURAM, LICHSGFIN, INOXWIND, AMBUJACEM",
+      "reason": "MWPL above 80% near-ban (caller list). LICHSGFIN and INOXWIND appeared in the closing-strength scan and were dropped."
+    },
+    {
+      "symbol": "SBIN",
+      "reason": "Results 3 Nov (Rule 2.1). Closed at 0.97 range position and was dropped."
+    },
+    {
+      "symbol": "BAJAJFINSV, LUPIN, SOLARINDS, MCX",
+      "reason": "Results 3 Nov (Rule 2.1)."
+    },
+    {
+      "symbol": "APOLLOHOSP, AUROPHARMA, BIOCON, BSE, CUMMINSIND, DABUR, NHPC, NYKAA, PFC, PIIND, PREMIERENE, ZYDUSLIFE",
+      "reason": "Results 4 Nov (Rule 2.1)."
+    },
+    {
+      "symbol": "ITC, MARICO, NATIONALUM, PETRONET, CONCOR",
+      "reason": "Results after 2 Nov close (Rule 2.1). ITC was in the scan with a 0.77 range position."
+    },
+    {
+      "symbol": "INFY",
+      "reason": "Ex-dividend 3 Nov; Kite candle also shows close 1135 below day low 1151 (suspect data). Short veto under Rule 2.4."
+    },
+    {
+      "symbol": "COALINDIA",
+      "reason": "Ex-dividend 4 Nov; strong close (range 1.0) was dropped."
+    },
+    {
+      "symbol": "MAZDOCK, ASIANPAINT, GODREJCP",
+      "reason": "Ex-dividend 3 or 4 Nov (caller list). ASIANPAINT and GODREJCP were not strong enough in range position anyway."
+    },
+    {
+      "symbol": "RELIANCE",
+      "reason": "Price up but fut OI fell 5.3% (141.1M vs 149.0M): short covering (Rule 1.1)."
+    },
+    {
+      "symbol": "DIXON",
+      "reason": "Fut OI fell 7.7%: short covering (Rule 1.1)."
+    },
+    {
+      "symbol": "ABB, ADANIGREEN, ADANIPOWER, AMBER, GAIL, GRASIM, HDFCAMC, HINDALCO, HINDZINC, JSWSTEEL, MUTHOOTFIN, SIEMENS, SRF, ULTRACEMCO, VEDL, UNOMINDA, JIOFIN, SUZLON, VMM, BAJFINANCE, ADANIENT, SHREECEM, ABCAPITAL",
+      "reason": "Price up and strong close, but fut OI down on 2 Nov vs 30 Oct: short covering (Rule 1.1). Changes ranged from -0.15% to -7.7%."
+    },
+    {
+      "symbol": "TATAPOWER, ADANIENSOL",
+      "reason": "OI change essentially flat (+0.05% and +0.03%): no real build-up."
+    },
+    {
+      "symbol": "GODREJPROP",
+      "reason": "Passed OI (+1.38%), range (0.95) and volume (1.68x), but Realty index was weak on 2 Nov (Rule 1.4 sector divergence) and price is below EMA50."
+    },
+    {
+      "symbol": "ONGC",
+      "reason": "Long Buildup (OI +3.0%) but volume only 1.14x the 20-day average (below 1.5x)."
+    },
+    {
+      "symbol": "TATASTEEL",
+      "reason": "Long Buildup (OI +0.64%) but volume only 1.33x (below 1.5x)."
+    },
+    {
+      "symbol": "BPCL",
+      "reason": "Long Buildup (OI +2.35%) but volume only 0.73x."
+    },
+    {
+      "symbol": "360ONE",
+      "reason": "Long Buildup (OI +0.97%) but volume only 0.37x."
+    },
+    {
+      "symbol": "OFSS",
+      "reason": "Short Buildup (OI +1.95%) but volume only 0.66x."
+    },
+    {
+      "symbol": "MFSL",
+      "reason": "Short Buildup (OI +2.5%) but volume only 0.92x."
+    },
+    {
+      "symbol": "LAURUSLABS",
+      "reason": "Price down but fut OI fell 0.4%: long unwinding (Rule 1.3)."
+    },
+    {
+      "symbol": "SUNPHARMA",
+      "reason": "Closed near high (0.89) despite the eye-drop plant halt; not checked further (no fut OI pull) because the news is negative."
+    }
+  ],
+  "verification": {
+    "checked_at": "2026-11-03 morning IST",
+    "method": "Recomputed in Python from Kite day candles (spot) and futures day candles with OI",
+    "matches_subagent": [
+      "close",
+      "% change",
+      "range position",
+      "volume x 20d avg",
+      "futures OI change vs 30 Oct"
+    ],
+    "rsi14_wilder_21_closes_only": {
+      "JINDALSTEL": 54.7,
+      "OIL": 61.8,
+      "NBCC": 53.0,
+      "POLICYBZR": 41.8
+    },
+    "note": "RSI values in the picks came from a hand calculation and differ from the Wilder RSI on 21 closes (JINDALSTEL 73 vs 55); treat RSI as unreliable. 20/50 EMA were not verified (needs ~60 sessions)."
+  }
+}
