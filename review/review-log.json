@@ -4,17 +4,7 @@
   "failed_trades": 8,
   "win_rate_percent": 50.0,
   "average_return_percent": 0.68,
-  "active_tracked_batches": [
-    {
-      "date": "2026-10-29",
-      "status": "HOLDING_OVERNIGHT",
-      "count": 2,
-      "symbols": [
-        "NSE:ADANIPORTS",
-        "NSE:HEROMOTOCO"
-      ]
-    }
-  ],
+  "active_tracked_batches": [],
   "history": [
     {
       "batch_date": "2026-10-16",
@@ -288,10 +278,138 @@
         }
       ],
       "corrected_note": "NOT_TRADABLE: picks generated at 19:14:30 IST, after the 15:30 close"
+    },
+    {
+      "batch_date": "2026-10-29",
+      "review_date": null,
+      "trades": [
+        {
+          "symbol": "NSE:ADANIPORTS",
+          "side": "BUY",
+          "result": "UNREVIEWED",
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": null
+        },
+        {
+          "symbol": "NSE:HEROMOTOCO",
+          "side": "SELL",
+          "result": "UNREVIEWED",
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": null
+        }
+      ],
+      "corrected_note": "NOT_TRADABLE: generated 19:05:40 IST (after 15:30 close); also never reviewed on 2026-10-30, so STALE. Excluded. Logged 2026-11-03."
+    },
+    {
+      "batch_date": "2026-11-02",
+      "review_date": "2026-11-03",
+      "source": "data/picks-2026-11-02.json (claude.ai Project)",
+      "trades": [],
+      "corrected_note": "No picks: screener status PARTIAL (Kite unavailable at 15:17 IST). No review required."
+    },
+    {
+      "batch_date": "2026-11-02-eod-reference",
+      "review_date": "2026-11-03",
+      "source": "data/picks-2026-11-02-eod-reference.json",
+      "trades": [
+        {
+          "symbol": "NSE:JINDALSTEL",
+          "side": "BUY",
+          "entry": 1102.0,
+          "target": 1124.05,
+          "stop": 1091.0,
+          "open": 1105,
+          "high": 1111.9,
+          "low": 1098.8,
+          "price_945": 1101.5,
+          "high_915_945": 1111.9,
+          "low_915_945": 1100.1,
+          "result": "NOT_TRADABLE",
+          "would_be_result": "SCRATCH",
+          "would_be_return_percent": -0.05,
+          "trigger_time": "09:45 time exit",
+          "mfe_915_945": 0.9,
+          "mae_915_945": -0.17,
+          "mfe_day": 0.9,
+          "mae_day": -0.29,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": -0.05
+        },
+        {
+          "symbol": "NSE:OIL",
+          "side": "BUY",
+          "entry": 461.9,
+          "target": 471.15,
+          "stop": 457.3,
+          "open": 460,
+          "high": 460,
+          "low": 451.3,
+          "price_945": 453.5,
+          "high_915_945": 460,
+          "low_915_945": 451.3,
+          "result": "NOT_TRADABLE",
+          "would_be_result": "LOSS",
+          "would_be_return_percent": -1.0,
+          "trigger_time": "09:15",
+          "mfe_915_945": -0.41,
+          "mae_915_945": -2.29,
+          "mfe_day": -0.41,
+          "mae_day": -2.29,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": -1.0
+        },
+        {
+          "symbol": "NSE:NBCC",
+          "side": "BUY",
+          "entry": 76.13,
+          "target": 77.65,
+          "stop": 75.37,
+          "open": 76.96,
+          "high": 76.96,
+          "low": 74.66,
+          "price_945": 76.18,
+          "high_915_945": 76.96,
+          "low_915_945": 75.48,
+          "result": "NOT_TRADABLE",
+          "would_be_result": "SCRATCH",
+          "would_be_return_percent": 0.07,
+          "trigger_time": "09:45 time exit",
+          "mfe_915_945": 1.09,
+          "mae_915_945": -0.85,
+          "mfe_day": 1.09,
+          "mae_day": -1.93,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": 0.07
+        },
+        {
+          "symbol": "NSE:POLICYBZR",
+          "side": "SELL",
+          "entry": 931.0,
+          "target": 912.4,
+          "stop": 940.3,
+          "open": 935,
+          "high": 956.1,
+          "low": 916,
+          "price_945": 951.2,
+          "high_915_945": 956.1,
+          "low_915_945": 925.7,
+          "result": "NOT_TRADABLE",
+          "would_be_result": "LOSS",
+          "would_be_return_percent": -1.0,
+          "trigger_time": "09:23",
+          "mfe_915_945": 0.57,
+          "mae_915_945": -2.7,
+          "mfe_day": 1.61,
+          "mae_day": -2.7,
+          "corrected_result": "NOT_TRADABLE",
+          "corrected_return_percent": -1.0
+        }
+      ],
+      "corrected_note": "NOT_TRADABLE: tradable=false; reference list built ~09:00 IST on 2026-11-03 from the 2 Nov close. Reviewed for learning only (minute candles 09:15-09:44, Kite)."
     }
   ],
   "corrected_metrics": {
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "method": "WIN only if target touched; returns capped at target/stop; picks generated after 15:30 IST excluded as NOT_TRADABLE; batches reviewed later than next trading day excluded as STALE",
     "tradable_trades": 6,
     "wins": 1,
