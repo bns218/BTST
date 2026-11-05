@@ -406,10 +406,26 @@
         }
       ],
       "corrected_note": "NOT_TRADABLE: tradable=false; reference list built ~09:00 IST on 2026-11-03 from the 2 Nov close. Reviewed for learning only (minute candles 09:15-09:44, Kite)."
+    },
+    {
+      "batch_date": "2026-11-03",
+      "review_date": null,
+      "generated_at": "15:16:39 IST",
+      "source": "claude.ai Project claude/btst/picks-2026-11-03.json (not in repo)",
+      "trades": [],
+      "corrected_note": "No picks: Screener PARTIAL: Kite not logged in at run time; US midterm binary event (Rule 3.2). allow_new_positions=false. No performance review required. Housekeeping entry added 2026-11-05 (batch was not reviewed on 2026-11-04)."
+    },
+    {
+      "batch_date": "2026-11-04",
+      "review_date": "2026-11-05",
+      "generated_at": "15:16:40 IST",
+      "source": "claude.ai Project claude/btst/picks-2026-11-04.json (not in repo)",
+      "trades": [],
+      "corrected_note": "No picks: Screener PARTIAL: no Kite tools in run; allow_new_positions=false. No performance review required."
     }
   ],
   "corrected_metrics": {
-    "as_of": "2026-11-03",
+    "as_of": "2026-11-05",
     "method": "WIN only if target touched; returns capped at target/stop; picks generated after 15:30 IST excluded as NOT_TRADABLE; batches reviewed later than next trading day excluded as STALE",
     "tradable_trades": 6,
     "wins": 1,
