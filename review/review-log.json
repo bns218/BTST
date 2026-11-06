@@ -422,10 +422,18 @@
       "source": "claude.ai Project claude/btst/picks-2026-11-04.json (not in repo)",
       "trades": [],
       "corrected_note": "No picks: Screener PARTIAL: no Kite tools in run; allow_new_positions=false. No performance review required."
+    },
+    {
+      "batch_date": "2026-11-05",
+      "review_date": "2026-11-06",
+      "generated_at": "15:21:10 IST",
+      "source": "claude.ai Project claude/btst/picks-2026-11-05.json (not in repo)",
+      "trades": [],
+      "corrected_note": "No picks: Screener PARTIAL: Kite login requested ~15:16 IST but not completed by the deadline; no F&O data, so no picks published (Shield had allow_new_positions=true, bullish, max 4). No performance review required."
     }
   ],
   "corrected_metrics": {
-    "as_of": "2026-11-05",
+    "as_of": "2026-11-06",
     "method": "WIN only if target touched; returns capped at target/stop; picks generated after 15:30 IST excluded as NOT_TRADABLE; batches reviewed later than next trading day excluded as STALE",
     "tradable_trades": 6,
     "wins": 1,
